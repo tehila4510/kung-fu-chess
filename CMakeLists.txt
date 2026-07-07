@@ -14,6 +14,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(SOURCES
     src/main.cpp
+    src/Board.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
