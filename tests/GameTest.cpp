@@ -57,6 +57,7 @@ TEST_CASE("Game.legalKingMove") {
     Game game = makeGame({". wK . .", ". . . ."});
     game.handlePlayerClick({0, 1}, 'w');
     game.handlePlayerClick({0, 2}, 'w');
+    game.handleWait(1000);
     CHECK_EQ(".", game.getBoard().getCell({0, 1}));
     CHECK_EQ("wK", game.getBoard().getCell({0, 2}));
     CHECK_FALSE(game.isPieceSelected('w'));
@@ -92,6 +93,7 @@ TEST_CASE("Game.captureEnemyPiece") {
     Game game = makeGame({"wR . bQ .", ". . . ."});
     game.handlePlayerClick({0, 0}, 'w');
     game.handlePlayerClick({0, 2}, 'w');
+    game.handleWait(2000);
     CHECK_EQ(".", game.getBoard().getCell({0, 0}));
     CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
 }
@@ -149,6 +151,7 @@ TEST_CASE("Game.handleClickMoveToEmpty") {
     Game game = makeGame({". wK . .", ". . . ."});
     game.handleClick(150, 50);
     game.handleClick(250, 50);
+    game.handleWait(1000);
     CHECK_EQ(".", game.getBoard().getCell({0, 1}));
     CHECK_EQ("wK", game.getBoard().getCell({0, 2}));
     CHECK_FALSE(game.isPieceSelected('w'));
@@ -164,6 +167,7 @@ TEST_CASE("Game.handleClickCaptureUsesSelectionColor") {
     Game game = makeGame({"wR . bR"});
     game.handleClick(50, 50);
     game.handleClick(250, 50);
+    game.handleWait(2000);
     CHECK_EQ(".", game.getBoard().getCell({0, 0}));
     CHECK_EQ(".", game.getBoard().getCell({0, 1}));
     CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
@@ -174,6 +178,7 @@ TEST_CASE("Game.knightJumpsOverBlockers") {
     Game game = makeGame({"wN wP .", "wP . .", ". . ."});
     game.handleClick(50, 50);
     game.handleClick(150, 250);
+    game.handleWait(2000);
     CHECK_EQ(".", game.getBoard().getCell({0, 0}));
     CHECK_EQ("wP", game.getBoard().getCell({0, 1}));
     CHECK_EQ("wP", game.getBoard().getCell({1, 0}));
@@ -185,6 +190,41 @@ TEST_CASE("Game.rookCapturesEnemyAtDestination") {
     Game game = makeGame({"wR . bR"});
     game.handleClick(50, 50);
     game.handleClick(250, 50);
+    game.handleWait(2000);
+    CHECK_EQ(".", game.getBoard().getCell({0, 0}));
+    CHECK_EQ(".", game.getBoard().getCell({0, 1}));
+    CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
+}
+
+TEST_CASE("Game.oneCellMoveBeforeArrivalBoardUnchanged") {
+    Game game = makeGame({"wR . ."});
+    game.handleClick(50, 50);
+    game.handleClick(150, 50);
+    game.handleWait(500);
+    CHECK_EQ("wR", game.getBoard().getCell({0, 0}));
+    CHECK_EQ(".", game.getBoard().getCell({0, 1}));
+}
+
+TEST_CASE("Game.twoCellMoveBeforeAndAfterArrival") {
+    Game game = makeGame({"wR . ."});
+    game.handleClick(50, 50);
+    game.handleClick(250, 50);
+    game.handleWait(1000);
+    CHECK_EQ("wR", game.getBoard().getCell({0, 0}));
+    CHECK_EQ(".", game.getBoard().getCell({0, 2}));
+    game.handleWait(1000);
+    CHECK_EQ(".", game.getBoard().getCell({0, 0}));
+    CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
+}
+
+TEST_CASE("Game.clicksDuringMoveInFlightAreIgnored") {
+    Game game = makeGame({"wR . ."});
+    game.handleClick(50, 50);
+    game.handleClick(250, 50);
+    game.handleWait(1000);
+    game.handleClick(50, 50);
+    game.handleClick(150, 50);
+    game.handleWait(1000);
     CHECK_EQ(".", game.getBoard().getCell({0, 0}));
     CHECK_EQ(".", game.getBoard().getCell({0, 1}));
     CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
