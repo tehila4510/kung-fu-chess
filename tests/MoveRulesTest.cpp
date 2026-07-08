@@ -108,3 +108,43 @@ TEST_CASE("MoveRules.rookCapturesEnemyAtDestination") {
     Board board = loadBoardFromRows({"wR . bR"});
     CHECK(isValidMove(board, {0, 0}, {0, 2}));
 }
+
+TEST_CASE("MoveRules.pawnLegal") {
+    Board board = loadBoardFromRows({". . . .", "wP . . .", ". . . ."});
+    CHECK(isValidMove(board, {1, 0}, {0, 0}));
+}
+
+TEST_CASE("MoveRules.blackPawnLegal") {
+    Board board = loadBoardFromRows({"bP . . .", ". . . ."});
+    CHECK(isValidMove(board, {0, 0}, {1, 0}));
+}
+
+TEST_CASE("MoveRules.pawnIllegal") {
+    Board board = loadBoardFromRows({". . . .", ". . . .", "wP . . ."});
+    CHECK_FALSE(isValidMove(board, {2, 0}, {0, 0}));
+}
+
+TEST_CASE("MoveRules.pawnDiagonalCapture") {
+    Board board = loadBoardFromRows({"bN . .", ". wP .", ". . ."});
+    CHECK(isValidMove(board, {1, 1}, {0, 0}));
+}
+
+TEST_CASE("MoveRules.pawnForwardCaptureInvalid") {
+    Board board = loadBoardFromRows({"bN . .", "wP . .", ". . ."});
+    CHECK_FALSE(isValidMove(board, {1, 0}, {0, 0}));
+}
+
+TEST_CASE("MoveRules.pawnDiagonalWithoutEnemyInvalid") {
+    Board board = loadBoardFromRows({". . .", ". wP .", ". . ."});
+    CHECK_FALSE(isValidMove(board, {1, 1}, {0, 2}));
+}
+
+TEST_CASE("MoveRules.pawnDiagonalWithFriendlyInvalid") {
+    Board board = loadBoardFromRows({". wN .", ". wP .", ". . ."});
+    CHECK_FALSE(isValidMove(board, {1, 1}, {0, 0}));
+}
+
+TEST_CASE("MoveRules.pawnBlockedForwardInvalid") {
+    Board board = loadBoardFromRows({"wR . .", "wP . .", ". . ."});
+    CHECK_FALSE(isValidMove(board, {1, 0}, {0, 0}));
+}

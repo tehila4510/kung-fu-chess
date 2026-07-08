@@ -41,6 +41,22 @@ static bool isValidKnight(int dr, int dc) {
     return (adr == 2 && adc == 1) || (adr == 1 && adc == 2);
 }
 
+static bool isValidPawnMove(const Board& board, const Position& from, const Position& to, char color) {
+    const int dr = to.row - from.row;
+    const int dc = to.col - from.col;
+    const int forward = (color == 'w') ? -1 : 1;
+
+    if (dc == 0 && dr == forward && board.isEmpty(to)) {
+        return true;
+    }
+
+    if (std::abs(dc) == 1 && dr == forward && !board.isEmpty(to)) {
+        return true;
+    }
+
+    return false;
+}
+
 bool isValidMove(const Board& board, const Position& from, const Position& to) {
     if (!board.isWithinBounds(from) || !board.isWithinBounds(to)) {
         return false;
@@ -60,6 +76,8 @@ bool isValidMove(const Board& board, const Position& from, const Position& to) {
     const char type = piece[1];
 
     switch (type) {
+        case 'P':
+            return isValidPawnMove(board, from, to, piece[0]);
         case 'K':
             return isValidKing(dr, dc);
         case 'R':
