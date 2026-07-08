@@ -229,3 +229,108 @@ TEST_CASE("Game.clicksDuringMoveInFlightAreIgnored") {
     CHECK_EQ(".", game.getBoard().getCell({0, 1}));
     CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
 }
+
+TEST_CASE("Game.kingCaptureEndsGame") {
+    Game game = makeGame({"wR . bK"});
+    game.handlePlayerClick({0, 0}, 'w');
+    game.handlePlayerClick({0, 2}, 'w');
+    CHECK_FALSE(game.getIsGameOver());
+    game.handleWait(2000);
+    CHECK(game.getIsGameOver());
+    CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
+}
+
+TEST_CASE("Game.kingNotCapturedUntilMoveArrives") {
+    Game game = makeGame({"wR . bK"});
+    game.handlePlayerClick({0, 0}, 'w');
+    game.handlePlayerClick({0, 2}, 'w');
+    game.handleWait(1000);
+    CHECK_FALSE(game.getIsGameOver());
+    CHECK_EQ("bK", game.getBoard().getCell({0, 2}));
+    game.handleWait(1000);
+    CHECK(game.getIsGameOver());
+    CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
+}
+
+TEST_CASE("Game.noActionsAfterKingCaptured") {
+    Game game = makeGame({"wR . bK", "bR . ."});
+    game.handlePlayerClick({0, 0}, 'w');
+    game.handlePlayerClick({0, 2}, 'w');
+    game.handleWait(2000);
+    CHECK(game.getIsGameOver());
+
+    game.handlePlayerClick({1, 0}, 'b');
+    CHECK_FALSE(game.isPieceSelected('b'));
+    game.handlePlayerClick({1, 2}, 'b');
+    CHECK_EQ("bR", game.getBoard().getCell({1, 0}));
+    CHECK_EQ(".", game.getBoard().getCell({1, 2}));
+
+    game.handlePlayerClick({0, 2}, 'w');
+    game.handlePlayerClick({0, 1}, 'w');
+    CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
+    CHECK_EQ(".", game.getBoard().getCell({0, 1}));
+}
+
+TEST_CASE("Game.handleClickBlockedAfterGameOver") {
+    Game game = makeGame({"wR . bK", "bR . ."});
+    game.handleClick(50, 50);
+    game.handleClick(250, 50);
+    game.handleWait(2000);
+    CHECK(game.getIsGameOver());
+
+    game.handleClick(50, 150);
+    game.handleClick(250, 150);
+    CHECK_EQ("bR", game.getBoard().getCell({1, 0}));
+    CHECK_EQ(".", game.getBoard().getCell({1, 2}));
+}
+
+TEST_CASE("Game.capturingNonKingDoesNotEndGame") {
+    Game game = makeGame({"wR . bQ", "bK . ."});
+    game.handlePlayerClick({0, 0}, 'w');
+    game.handlePlayerClick({0, 2}, 'w');
+    game.handleWait(2000);
+    CHECK_FALSE(game.getIsGameOver());
+    CHECK_EQ("bK", game.getBoard().getCell({1, 0}));
+
+    game.handlePlayerClick({1, 0}, 'b');
+    CHECK(game.isPieceSelected('b'));
+}
+
+TEST_CASE("Game.blackCapturingWhiteKingEndsGame") {
+    Game game = makeGame({"wK . bR"});
+    game.handlePlayerClick({0, 2}, 'b');
+    game.handlePlayerClick({0, 0}, 'b');
+    game.handleWait(2000);
+    CHECK(game.getIsGameOver());
+    CHECK_EQ("bR", game.getBoard().getCell({0, 0}));
+
+    game.handlePlayerClick({0, 0}, 'w');
+    CHECK_FALSE(game.isPieceSelected('w'));
+}
+
+TEST_CASE("Game.selectionsClearedWhenKingCaptured") {
+    Game game = makeGame({"wR . bK", "bR . ."});
+    game.handlePlayerClick({1, 0}, 'b');
+    CHECK(game.isPieceSelected('b'));
+    game.handlePlayerClick({0, 0}, 'w');
+    game.handlePlayerClick({0, 2}, 'w');
+    game.handleWait(2000);
+    CHECK(game.getIsGameOver());
+    CHECK_FALSE(game.isPieceSelected('b'));
+    CHECK_FALSE(game.isPieceSelected('w'));
+}
+
+TEST_CASE("Game.clicksDuringKingCaptureMoveStillIgnoredUntilArrival") {
+    Game game = makeGame({"wR . bK", "bR . ."});
+    game.handlePlayerClick({0, 0}, 'w');
+    game.handlePlayerClick({0, 2}, 'w');
+    game.handlePlayerClick({1, 0}, 'b');
+    game.handlePlayerClick({1, 2}, 'b');
+    game.handleWait(1000);
+    CHECK_FALSE(game.getIsGameOver());
+    CHECK_EQ("bK", game.getBoard().getCell({0, 2}));
+    CHECK_EQ("bR", game.getBoard().getCell({1, 0}));
+    game.handleWait(1000);
+    CHECK(game.getIsGameOver());
+    CHECK_EQ("wR", game.getBoard().getCell({0, 2}));
+}

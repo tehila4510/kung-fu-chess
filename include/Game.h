@@ -22,6 +22,7 @@ private:
 
     PlayerSelection selections[2]; // 0=white, 1=black
     ActiveMove activeMove;
+    bool isGameOver = false;
     
     static bool isValidPlayerColor(char playerColor);
     static int colorToIndex(char playerColor);
@@ -43,6 +44,7 @@ public:
 
     const Board& getBoard() const { return board; }
     long long getGameClockMs() const { return gameClockMs; }
+    bool getIsGameOver() const { return isGameOver; }
     bool isPieceSelected(char playerColor) const;
     Position getSelectedPosition(char playerColor) const;
 };

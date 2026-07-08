@@ -42,7 +42,7 @@ bool Game::hasMoveInFlight() const {
 }
 
 void Game::handleClick(int x, int y) {
-    if (hasMoveInFlight()) {
+    if (isGameOver || hasMoveInFlight()) {
         return;
     }
     Position pos = board.pixelToCell(x, y);
@@ -54,14 +54,14 @@ void Game::handleClick(int x, int y) {
 }
 
 void Game::handleClick(int x, int y, char playerColor) {
-    if (!isValidPlayerColor(playerColor)) {
+    if (isGameOver || !isValidPlayerColor(playerColor)) {
         return;
     }
     handlePlayerClick(board.pixelToCell(x, y), playerColor);
 }
 
 void Game::handlePlayerClick(const Position& pos, char playerColor) {
-    if (!isValidPlayerColor(playerColor)) {
+    if (isGameOver || !isValidPlayerColor(playerColor)) {
         return;
     }
 
@@ -121,10 +121,17 @@ void Game::handleWait(int ms) {
     gameClockMs += ms;
 
     if (activeMove.isActive && gameClockMs >= activeMove.arrivalTime) {
+        const std::string capturedPiece = board.getCell(activeMove.to);
         board.setCell(activeMove.to, activeMove.piece);
         board.setCell(activeMove.from, ".");
+        if (capturedPiece.size() == 2 && capturedPiece[1] == 'K') {
+            isGameOver = true;
+            selections[0].active = false;
+            selections[1].active = false;
+        }
         activeMove.isActive = false;
     }
+
 }
 
 void Game::handlePrintBoard() const {
