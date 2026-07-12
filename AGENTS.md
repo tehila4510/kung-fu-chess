@@ -13,10 +13,10 @@ include/
 ├── rules/       IPieceRule strategies, RuleEngine
 ├── realtime/    Motion, RealTimeArbiter
 ├── engine/      GameEngine
-├── io/          BoardParser, BoardPrinter
+├── io/          BoardParser, BoardPrinter (IBoardPrinter)
 ├── input/       Controller, BoardMapper
 ├── view/        Renderer, ImageView
-├── texttests/   ScriptParser, ScriptRunner
+├── texttests/   ScriptParser (IScriptSource), ScriptRunner, ScriptCommand
 └── App.h        Composition root
 
 src/             mirrors include/ paths + main.cpp
@@ -26,9 +26,10 @@ CMakeLists.txt   optional CMake build
 ```
 
 > Legacy `Board.h`/`Board.cpp`, `Game.h`/`Game.cpp`, and `MoveRules.h`/`MoveRules.cpp`
-> have been removed. `src/main.cpp` is the composition root; it delegates entirely to
-> `ScriptRunner::run(std::cin, std::cout)`, which parses the `Board:`/`Commands:` protocol
-> (via `ScriptParser`/`BoardParser`) and replays it against the `model/rules/realtime/engine/input/io` layers.
+> have been removed. `src/main.cpp` is the composition root; it constructs the concrete `ScriptParser`
+> (an `IScriptSource`) and `BoardPrinter` (an `IBoardPrinter`), injects them into `ScriptRunner` by const
+> reference, then calls `ScriptRunner::run(std::cin, std::cout)`, which parses the `Board:`/`Commands:`
+> protocol and replays it against the `model/rules/realtime/engine/input/io` layers.
 
 ## Build & verify
 

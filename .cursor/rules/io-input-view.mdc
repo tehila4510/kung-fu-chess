@@ -11,7 +11,8 @@ alwaysApply: false
 1. Board rows until `Board:` marker (or legacy: rows then `Commands:`)
 2. Commands: `click X Y`, `jump X Y`, `wait MS`, `print board`
 3. Errors to stdout: `ERROR UNKNOWN_TOKEN`, `ERROR ROW_WIDTH_MISMATCH`, etc.
-4. `main.cpp` runs the whole protocol via `ScriptRunner::run(std::cin, std::cout)` — no hardcoded demo
+4. `main.cpp` wires `ScriptParser` + `BoardPrinter` into `ScriptRunner` and runs the whole protocol via
+   `ScriptRunner::run(std::cin, std::cout)` — no hardcoded demo
 
 ## Layer roles
 
@@ -32,9 +33,12 @@ stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapsh
 - `Controller`: translate `click` into `requestMove(from, to)` based on selection state (clicking another
   same-color piece re-targets the selection instead of requesting a move); translate `jump` directly into
   `requestJump(at)`
-- `ScriptParser`: parses the `Board:`/`Commands:` protocol into a `Board` + `ScriptCommand` list
+- `ScriptParser`: parses the `Board:`/`Commands:` protocol into a `Board` + `ScriptCommand` list; implements
+  the `IScriptSource` interface (command DTOs live in `texttests/ScriptCommand.h`)
 - `ScriptRunner`: replays parsed commands against a fresh `GameEngine`/`Controller`, writing `print board`
-  output; this is what `main.cpp` calls with `std::cin`/`std::cout`
+  output; receives its `IScriptSource` and `IBoardPrinter` collaborators by const reference through its
+  constructor (dependency injection). `main.cpp` is the composition root: it constructs the concrete
+  `ScriptParser`/`BoardPrinter`, wires them into `ScriptRunner`, then calls `run(std::cin, std::cout)`
 
 ## View flow
 

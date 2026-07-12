@@ -3,18 +3,22 @@
 #include "engine/GameEngine.h"
 #include "input/Controller.h"
 #include "io/BoardParser.h"
-#include "io/BoardPrinter.h"
-#include "texttests/ScriptParser.h"
+#include "io/IBoardPrinter.h"
+#include "texttests/IScriptSource.h"
+#include "texttests/ScriptCommand.h"
 
 #include <ostream>
+#include <utility>
 
 namespace {
 constexpr int kCellSize = 100;
 }
 
+ScriptRunner::ScriptRunner(const IScriptSource& source, const IBoardPrinter& printer)
+    : source_(source), printer_(printer) {}
+
 bool ScriptRunner::run(std::istream& input, std::ostream& output) const {
-    ScriptParser parser;
-    ScriptParseResult parsed = parser.parse(input);
+    ScriptParseResult parsed = source_.parse(input);
 
     if (!parsed.board.has_value()) {
         output << toReasonCode(parsed.boardStatus) << '\n';
@@ -24,7 +28,6 @@ bool ScriptRunner::run(std::istream& input, std::ostream& output) const {
     GameEngine engine;
     engine.setup(std::move(*parsed.board));
     Controller controller(engine, kCellSize);
-    BoardPrinter printer;
 
     for (const ScriptCommand& cmd : parsed.commands) {
         switch (cmd.kind) {
@@ -38,7 +41,7 @@ bool ScriptRunner::run(std::istream& input, std::ostream& output) const {
                 engine.wait(cmd.ms);
                 break;
             case ScriptCommandKind::PrintBoard:
-                printer.print(Board(engine.snapshot().cells), output);
+                printer_.print(Board(engine.snapshot().cells), output);
                 break;
             case ScriptCommandKind::Unknown:
                 break;
