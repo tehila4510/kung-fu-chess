@@ -7,6 +7,7 @@
 #include "texttests/IScriptSource.h"
 #include "texttests/ScriptCommand.h"
 
+#include <iostream>
 #include <ostream>
 #include <utility>
 
@@ -18,34 +19,47 @@ ScriptRunner::ScriptRunner(const IScriptSource& source, const IBoardPrinter& pri
     : source_(source), printer_(printer) {}
 
 bool ScriptRunner::run(std::istream& input, std::ostream& output) const {
-    ScriptParseResult parsed = source_.parse(input);
+    try {
+        if (!input) {
+            throw std::runtime_error("Input stream is not readable");
+        }
+        if (!output) {
+            throw std::runtime_error("Output stream is not writable");
+        }
 
-    if (!parsed.board.has_value()) {
-        output << toReasonCode(parsed.boardStatus) << '\n';
+        ScriptParseResult parsed = source_.parse(input);
+
+        if (!parsed.board.has_value()) {
+            output << toReasonCode(parsed.boardStatus) << '\n';
+            return false;
+        }
+
+        GameEngine engine;
+        engine.setup(std::move(*parsed.board));
+        Controller controller(engine, kCellSize);
+
+        for (const ScriptCommand& cmd : parsed.commands) {
+            switch (cmd.kind) {
+                case ScriptCommandKind::Click:
+                    controller.click(cmd.x, cmd.y);
+                    break;
+                case ScriptCommandKind::Jump:
+                    controller.jump(cmd.x, cmd.y);
+                    break;
+                case ScriptCommandKind::Wait:
+                    engine.wait(cmd.ms);
+                    break;
+                case ScriptCommandKind::PrintBoard:
+                    printer_.print(Board(engine.snapshot().cells), output);
+                    break;
+                case ScriptCommandKind::Unknown:
+                    break;
+            }
+        }
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Error in ScriptRunner::run: " << e.what() << std::endl;
+        output << "ERROR RUNTIME_FAILURE\n";
         return false;
     }
-
-    GameEngine engine;
-    engine.setup(std::move(*parsed.board));
-    Controller controller(engine, kCellSize);
-
-    for (const ScriptCommand& cmd : parsed.commands) {
-        switch (cmd.kind) {
-            case ScriptCommandKind::Click:
-                controller.click(cmd.x, cmd.y);
-                break;
-            case ScriptCommandKind::Jump:
-                controller.jump(cmd.x, cmd.y);
-                break;
-            case ScriptCommandKind::Wait:
-                engine.wait(cmd.ms);
-                break;
-            case ScriptCommandKind::PrintBoard:
-                printer_.print(Board(engine.snapshot().cells), output);
-                break;
-            case ScriptCommandKind::Unknown:
-                break;
-        }
-    }
-    return true;
 }

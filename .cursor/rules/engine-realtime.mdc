@@ -31,3 +31,16 @@ struct MoveResult { bool is_accepted; std::string reason; };
 - Rules layer decides legality **before** motion starts
 - Capture resolution happens at arrival time, not at move request time
 - No stdin/stdout, no pixel coordinates — only grid `Position` values
+
+## Exception handling
+
+### GameEngine
+
+- `requestMove` / `requestJump`: **catch** unexpected errors → `MoveResult{ false, "runtime_error" }`; do not log here
+- `setup` / `wait` / `snapshot`: **propagate** exceptions (negative `ms` throws `std::invalid_argument`)
+- Never parse text or write to streams in this layer
+
+### RealTimeArbiter
+
+- Validate piece tokens and coordinates; **throw** on violation — no try-catch
+- `advanceTime` throws on negative `ms`; board mutations rely on validated `Board` access

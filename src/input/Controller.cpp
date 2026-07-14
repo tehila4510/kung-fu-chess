@@ -42,44 +42,53 @@ static bool sameColor(const GameSnapshot& snap, const Position& a, const Positio
 }
 
 ClickResult Controller::click(int x, int y) {
-    const std::optional<Position> mapped = mapper.pixelToCell(x, y);
+    try {
+        const std::optional<Position> mapped = mapper.pixelToCell(x, y);
 
-    if (!mapped) {
-        clearSelection();
-        return { ClickOutcome::Cleared, { false, "" } };
-    }
-    const Position cell = *mapped;
-    const GameSnapshot snap = engine.snapshot();
-
-    if (!hasSelection) {
-        if (!cellHasPiece(snap, cell)) {
-            return { ClickOutcome::Ignored, { false, "" } };
+        if (!mapped) {
+            clearSelection();
+            return { ClickOutcome::Cleared, { false, "" } };
         }
-        selection = cell;
-        hasSelection = true;
-        return { ClickOutcome::Selected, { false, "" } };
-    }
+        const Position cell = *mapped;
+        const GameSnapshot snap = engine.snapshot();
 
-    if (cell == selection) {
+        if (!hasSelection) {
+            if (!cellHasPiece(snap, cell)) {
+                return { ClickOutcome::Ignored, { false, "" } };
+            }
+            selection = cell;
+            hasSelection = true;
+            return { ClickOutcome::Selected, { false, "" } };
+        }
+
+        if (cell == selection) {
+            clearSelection();
+            return { ClickOutcome::Cleared, { false, "" } };
+        }
+
+        if (cellHasPiece(snap, cell) && sameColor(snap, cell, selection)) {
+            selection = cell;
+            return { ClickOutcome::Selected, { false, "" } };
+        }
+
+        const Position from = selection;
         clearSelection();
-        return { ClickOutcome::Cleared, { false, "" } };
+        const MoveResult result = engine.requestMove(from, cell);
+        return { ClickOutcome::MoveRequested, result };
+    } catch (const std::exception&) {
+        clearSelection();
+        return { ClickOutcome::Cleared, { false, "runtime_error" } };
     }
-
-    if (cellHasPiece(snap, cell) && sameColor(snap, cell, selection)) {
-        selection = cell;
-        return { ClickOutcome::Selected, { false, "" } };
-    }
-
-    const Position from = selection;
-    clearSelection();
-    const MoveResult result = engine.requestMove(from, cell);
-    return { ClickOutcome::MoveRequested, result };
 }
 
 MoveResult Controller::jump(int x, int y) {
-    const std::optional<Position> mapped = mapper.pixelToCell(x, y);
-    if (!mapped) {
-        return { false, "outside_board" };
+    try {
+        const std::optional<Position> mapped = mapper.pixelToCell(x, y);
+        if (!mapped) {
+            return { false, "outside_board" };
+        }
+        return engine.requestJump(*mapped);
+    } catch (const std::exception&) {
+        return { false, "runtime_error" };
     }
-    return engine.requestJump(*mapped);
 }

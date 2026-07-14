@@ -1,6 +1,11 @@
 #include "model/GameState.h"
 
+#include <stdexcept>
+
 void GameState::initialize(Board initialBoard) {
+    if (initialBoard.getRowCount() <= 0 || initialBoard.getColCount() <= 0) {
+        throw std::invalid_argument("Cannot initialize game state with an empty board");
+    }
     board = std::move(initialBoard);
     gameOver = false;
 }

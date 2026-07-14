@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <sstream>
+#include <stdexcept>
 
 namespace {
 
@@ -41,7 +42,26 @@ BoardParseResult finalize(std::vector<std::vector<std::string>> grid) {
     return { Board(std::move(grid)), BoardParseStatus::Ok };
 }
 
+BoardParseResult parseGridFromStream(std::istream& input) {
+    std::vector<std::vector<std::string>> grid;
+    std::string line;
+    while (std::getline(input, line)) {
+        const std::string t = trim(line);
+        if (t == "Commands:") break;
+        if (t.empty() || t == "Board:") continue;
+
+        const std::vector<std::string> tokens = tokenize(t);
+        for (const std::string& tk : tokens) {
+            if (!isValidToken(tk)) {
+                return { std::nullopt, BoardParseStatus::UnknownToken };
+            }
+        }
+        grid.push_back(tokens);
+    }
+    return finalize(std::move(grid));
 }
+
+} // namespace
 
 const char* toReasonCode(BoardParseStatus status) {
     switch (status) {
@@ -54,22 +74,10 @@ const char* toReasonCode(BoardParseStatus status) {
 }
 
 BoardParseResult BoardParser::parse(std::istream& input) const {
-    std::vector<std::vector<std::string>> grid;
-    std::string line;
-    while (std::getline(input, line)) {
-        const std::string t = trim(line);
-        if (t == "Commands:") break;
-        if (t.empty() || t == "Board:") continue;
-
-        std::vector<std::string> tokens = tokenize(t);
-        for (const std::string& tk : tokens) {
-            if (!isValidToken(tk)) {
-                return { std::nullopt, BoardParseStatus::UnknownToken };
-            }
-        }
-        grid.push_back(std::move(tokens));
+    if (!input) {
+        throw std::runtime_error("Input stream is not readable");
     }
-    return finalize(std::move(grid));
+    return parseGridFromStream(input);
 }
 
 BoardParseResult BoardParser::parseText(const std::string& text) const {
@@ -87,13 +95,13 @@ BoardParseResult BoardParser::parseLines(const std::vector<std::string>& lines, 
         if (t == "Commands:") { ++index; break; }
         if (t.empty()) { ++index; continue; }
 
-        std::vector<std::string> tokens = tokenize(t);
+        const std::vector<std::string> tokens = tokenize(t);
         for (const std::string& tk : tokens) {
             if (!isValidToken(tk)) {
                 return { std::nullopt, BoardParseStatus::UnknownToken };
             }
         }
-        grid.push_back(std::move(tokens));
+        grid.push_back(tokens);
         ++index;
     }
     return finalize(std::move(grid));

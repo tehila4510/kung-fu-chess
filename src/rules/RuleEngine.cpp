@@ -11,24 +11,28 @@ RuleEngine::RuleEngine() {
 }
 
 MoveValidation RuleEngine::validateMove(const Board& board, const Position& from, const Position& to) const {
-    if (!board.isWithinBounds(from) || !board.isWithinBounds(to)) {
-        return { false, "outside_board" };
-    }
+    try {
+        if (!board.isWithinBounds(from) || !board.isWithinBounds(to)) {
+            return { false, "outside_board" };
+        }
 
-    const std::string token = board.getCell(from);
-    if (token == ".") {
-        return { false, "empty_source" };
-    }
+        const std::string token = board.getCell(from);
+        if (token == ".") {
+            return { false, "empty_source" };
+        }
 
-    if (board.isFriendly(to, token[0])) {
-        return { false, "friendly_destination" };
-    }
+        if (board.isFriendly(to, token[0])) {
+            return { false, "friendly_destination" };
+        }
 
-    const Piece piece = Piece::fromToken(token, from);
-    const auto it = rules.find(piece.kind);
-    if (it == rules.end() || !it->second->isValidMove(from, to, board)) {
-        return { false, "illegal_piece_move" };
-    }
+        const Piece piece = Piece::fromToken(token, from);
+        const auto it = rules.find(piece.kind);
+        if (it == rules.end() || !it->second->isValidMove(from, to, board)) {
+            return { false, "illegal_piece_move" };
+        }
 
-    return { true, "ok" };
+        return { true, "ok" };
+    } catch (const std::exception&) {
+        return { false, "invalid_piece" };
+    }
 }

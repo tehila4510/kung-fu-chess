@@ -1,5 +1,7 @@
 #include "rules/PieceRules.h"
 
+#include <optional>
+
 namespace piece_rules {
 
 bool inBounds(const Board& board, int row, int col) {
@@ -59,67 +61,94 @@ const std::vector<Step>& bishopDirs() {
     return dirs;
 }
 
+std::optional<Piece> pieceAt(const Board& board, const Position& from) {
+    try {
+        return Piece::fromToken(board.getCell(from), from);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
 } // namespace piece_rules
 
 bool RookRules::isValidMove(const Position& from, const Position& to, const Board& board) const {
-    const Piece piece = Piece::fromToken(board.getCell(from), from);
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return false;
+    }
     std::set<Position> legal;
-    piece_rules::addSlidingMoves(board, piece, piece_rules::rookDirs(), legal);
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::rookDirs(), legal);
     return legal.find(to) != legal.end();
 }
 
 bool BishopRules::isValidMove(const Position& from, const Position& to, const Board& board) const {
-    const Piece piece = Piece::fromToken(board.getCell(from), from);
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return false;
+    }
     std::set<Position> legal;
-    piece_rules::addSlidingMoves(board, piece, piece_rules::bishopDirs(), legal);
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::bishopDirs(), legal);
     return legal.find(to) != legal.end();
 }
 
 bool QueenRules::isValidMove(const Position& from, const Position& to, const Board& board) const {
-    const Piece piece = Piece::fromToken(board.getCell(from), from);
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return false;
+    }
     std::set<Position> legal;
-    piece_rules::addSlidingMoves(board, piece, piece_rules::rookDirs(), legal);
-    piece_rules::addSlidingMoves(board, piece, piece_rules::bishopDirs(), legal);
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::rookDirs(), legal);
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::bishopDirs(), legal);
     return legal.find(to) != legal.end();
 }
 
 bool KnightRules::isValidMove(const Position& from, const Position& to, const Board& board) const {
-    const Piece piece = Piece::fromToken(board.getCell(from), from);
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return false;
+    }
     const std::vector<piece_rules::Step> offsets{
         { -2, -1 }, { -2, 1 }, { -1, -2 }, { -1, 2 },
         { 1, -2 }, { 1, 2 }, { 2, -1 }, { 2, 1 }
     };
     std::set<Position> legal;
-    piece_rules::addStepMoves(board, piece, offsets, legal);
+    piece_rules::addStepMoves(board, *piece, offsets, legal);
     return legal.find(to) != legal.end();
 }
 
 bool KingRules::isValidMove(const Position& from, const Position& to, const Board& board) const {
-    const Piece piece = Piece::fromToken(board.getCell(from), from);
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return false;
+    }
     const std::vector<piece_rules::Step> offsets{
         { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 },
         { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 }
     };
     std::set<Position> legal;
-    piece_rules::addStepMoves(board, piece, offsets, legal);
+    piece_rules::addStepMoves(board, *piece, offsets, legal);
     return legal.find(to) != legal.end();
 }
 
 bool PawnRules::isValidMove(const Position& from, const Position& to, const Board& board) const {
-    const Piece piece = Piece::fromToken(board.getCell(from), from);
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return false;
+    }
+
     std::set<Position> legal;
 
-    const int forward = piece.isWhite() ? -1 : 1;
+    const int forward = piece->isWhite() ? -1 : 1;
     const int rows = board.getRowCount();
-    const int row = piece.position.row;
-    const int col = piece.position.col;
+    const int row = piece->position.row;
+    const int col = piece->position.col;
 
     Position oneForward{ row + forward, col };
     if (piece_rules::inBounds(board, oneForward.row, oneForward.col) && board.isEmpty(oneForward)) {
         legal.insert(oneForward);
 
         Position twoForward{ row + 2 * forward, col };
-        if (piece_rules::isPawnInitialRow(row, piece.color, rows)
+        if (piece_rules::isPawnInitialRow(row, piece->color, rows)
             && piece_rules::inBounds(board, twoForward.row, twoForward.col)
             && board.isEmpty(twoForward)) {
             legal.insert(twoForward);
@@ -130,7 +159,7 @@ bool PawnRules::isValidMove(const Position& from, const Position& to, const Boar
         Position capture{ row + forward, col + dc };
         if (piece_rules::inBounds(board, capture.row, capture.col)
             && !board.isEmpty(capture)
-            && !board.isFriendly(capture, piece.color)) {
+            && !board.isFriendly(capture, piece->color)) {
             legal.insert(capture);
         }
     }

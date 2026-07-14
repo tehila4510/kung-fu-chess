@@ -45,3 +45,27 @@ stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapsh
 - Receive `GameSnapshot` const reference or value copy
 - No direct `Board` access; all display data comes from the snapshot DTO
 - Keep rendering logic free of rule checks
+
+## Exception handling
+
+### I/O (`io/`)
+
+- Expected parse failures → `BoardParseStatus` + stdout codes (`ERROR UNKNOWN_TOKEN`, etc.) — not exceptions
+- Throw `std::runtime_error` only for broken streams; let `ScriptRunner` catch
+- `BoardPrinter`: throw on bad stream; no try-catch wrapper
+
+### Input (`input/`)
+
+- `BoardMapper::pixelToCell`: return `std::nullopt` for off-board pixels — no exceptions for normal input
+- `BoardMapper` constructor: throw on invalid dimensions
+- `Controller::click` / `jump`: catch unexpected errors → status DTO with `runtime_error`; clear selection on failure
+
+### View (`view/`)
+
+- `Img`: validate and throw (missing file, bad draw rect) — no try-catch; `graphics_main` is the top catcher
+
+### Text tests & app
+
+- `ScriptParser`: throw on malformed command syntax or unreadable stream; propagate to `ScriptRunner`
+- `ScriptRunner::run`: **the** recovery boundary for the stdin app — single catch, log to `stderr`, `ERROR RUNTIME_FAILURE` to stdout
+- `main`: outer safety net — catch, log, exit non-zero

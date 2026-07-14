@@ -39,3 +39,13 @@ alwaysApply: true
 - Do not add tests or docs unless requested
 - Do not create git commits unless the user asks
 - Register new `.cpp` files in both `build.bat` and `CMakeLists.txt`
+
+## Exception handling
+
+Follow **throw up, catch at boundaries** (full policy in `agents.mdc`):
+
+- **Model / realtime / low-level view:** defensive checks + `throw` from `<stdexcept>`; no try-catch, no logging
+- **No log-and-rethrow** at intermediate layers — one log at `ScriptRunner` / `main` / `graphics_main`
+- **Rules / engine / input:** catch only to translate into `MoveValidation`, `MoveResult`, or `ClickResult`
+- **I/O parse errors:** use `BoardParseStatus` / stdout protocol codes — not exceptions — for expected user input errors
+- **Skip try-catch** on `toString()`, basic arithmetic, and trivial getters

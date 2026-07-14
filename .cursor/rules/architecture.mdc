@@ -40,3 +40,16 @@ main/App → input/view/io → engine → rules/realtime → model
 2. Expose results via small structs, not raw internal state
 3. Keep abstractions generic: prefer interfaces + factories over `switch` on piece kind
 4. Validate at boundaries; assume nothing about caller intent inside engine
+
+## Exception flow
+
+Exceptions cross layers **upward only**; recovery happens at outer boundaries:
+
+```
+model / realtime  →  throw
+rules / engine    →  catch → MoveValidation / MoveResult
+input             →  catch → ClickResult / MoveResult
+texttests / main  →  catch → log + ERROR RUNTIME_FAILURE or exit code
+```
+
+Inner layers never `#include <iostream>` for error logging. See `agents.mdc` for the full policy.

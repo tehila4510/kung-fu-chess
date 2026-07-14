@@ -65,6 +65,34 @@ const auto it = rules.find(piece.kind);
 if (it != rules.end()) it->second->isValidMove(from, to, board);
 ```
 
+## Exception handling
+
+```cpp
+// Model: validate and throw — no try-catch
+void Board::getCell(const Position& pos) const {
+    if (!isWithinBounds(pos)) throw std::out_of_range("…");
+    return grid[pos.row][pos.col];
+}
+
+// Boundary: catch and translate to DTO — no rethrow, no log
+MoveValidation RuleEngine::validateMove(…) const {
+    try { … }
+    catch (const std::exception&) { return { false, "invalid_piece" }; }
+}
+
+// Top boundary: log once, recover
+bool ScriptRunner::run(…) const {
+    try { … }
+    catch (const std::exception& e) {
+        std::cerr << "Error in ScriptRunner::run: " << e.what() << '\n';
+        output << "ERROR RUNTIME_FAILURE\n";
+        return false;
+    }
+}
+```
+
+**Avoid:** catch-log-rethrow wrappers; try-catch around `toString()` or simple arithmetic; logging in `model/`.
+
 ## Avoid
 
 - Raw pointers for ownership; use `std::vector`, `std::string`, `std::optional`

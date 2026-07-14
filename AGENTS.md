@@ -89,6 +89,54 @@ if the cell is empty or that color already has a motion in flight.
 - `.h` files are **headers only**: include guards, includes, declarations, `static constexpr` constants, and defaulted special members (`= default`)
 - `.cpp` files hold **all implementations** — every function and method body lives in the matching source file, never inline in the header
 
+## Exception handling (throw up, catch at boundaries)
+
+**Goal:** validate early, throw from inner layers, catch only where errors must be translated or recovered — never log-and-rethrow the same exception at every layer.
+
+```
+model / realtime / view(Img)  →  throw only (no try-catch)
+         ↓ propagates
+rules / engine / input        →  catch & translate to DTO status codes
+         ↓ propagates (unexpected)
+ScriptRunner / main           →  single catch + log + graceful exit
+```
+
+### Model & low-level layers — validation only
+
+Applies to: `model/`, `realtime/`, low-level helpers (`BoardMapper` constructor, `Img`).
+
+- Perform defensive checks; **throw** from `<stdexcept>` when preconditions fail:
+  - `std::invalid_argument` — bad arguments, malformed tokens, inconsistent state
+  - `std::out_of_range` — grid/cell bounds, invalid coordinates
+  - `std::runtime_error` — I/O preconditions (e.g. unreadable stream, missing image)
+- **Do not** wrap throws in try-catch here. Let exceptions propagate upward.
+- **Do not** log in model/low-level code.
+
+### No redundant catch-and-rethrow
+
+- **Never** add `try { … } catch (const std::exception& e) { std::cerr << …; throw; }` unless local cleanup is required (RAII should handle resources).
+- One exception → one log line, at the top boundary only.
+
+### Boundary catchers — translate, don't rethrow
+
+| Layer | Catch when | Return / action |
+|-------|------------|-----------------|
+| `RuleEngine::validateMove` | `Piece::fromToken` or board access fails | `MoveValidation{ false, "invalid_piece" }` |
+| `PieceRules` (`pieceAt`) | token parse fails | `std::nullopt` → `isValidMove` returns `false` |
+| `GameEngine::requestMove` / `requestJump` | unexpected runtime error | `MoveResult{ false, "runtime_error" }` |
+| `Controller::click` / `jump` | unexpected error during input handling | `ClickResult` / `MoveResult` with `runtime_error` |
+| `BoardParser` | — | prefer `BoardParseStatus` enum; throw only for unreadable streams |
+| `ScriptRunner::run` | any uncaught `std::exception` | log once to `stderr`, print `ERROR RUNTIME_FAILURE` to stdout, return `false` |
+| `main` / `graphics_main` | startup or top-level failure | log once, non-zero exit |
+
+`GameEngine::wait` and `setup` **propagate** exceptions — `ScriptRunner` is the recovery boundary.
+
+### Keep it simple
+
+- No try-catch on operations that cannot realistically fail: `toString()`, basic integer math, trivial getters.
+- Catch by `const std::exception&` at boundaries; do not catch `...` unless rethrowing immediately.
+- Prefer `#include <stdexcept>` over custom exception types.
+
 ## When changing code
 
 - If a change affects layout, architecture, layers, build setup, input protocol, or project conventions — update the instruction files accordingly:

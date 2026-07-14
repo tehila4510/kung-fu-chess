@@ -1,5 +1,7 @@
 #include "engine/GameEngine.h"
 
+#include <stdexcept>
+
 static bool isKing(const std::string& piece) {
     return piece.size() == 2 && piece[1] == 'K';
 }
@@ -9,55 +11,67 @@ void GameEngine::setup(Board initialBoard) {
 }
 
 MoveResult GameEngine::requestMove(const Position& from, const Position& to) {
-    if (gameState.isGameOver()) {
-        return { false, "game_over" };
-    }
-
-    Board& board = gameState.getBoard();
-    const std::string mover = board.getCell(from);
-    if (mover.size() == 2) {
-        const char color = mover[0];
-        if (arbiter.hasActiveMotion(color)) {
-            return { false, "move_in_flight" };
+    try {
+        if (gameState.isGameOver()) {
+            return { false, "game_over" };
         }
-        const char opponent = color == 'w' ? 'b' : 'w';
-        if (arbiter.hasActiveTravel(opponent)) {
-            return { false, "common_route" };
+
+        Board& board = gameState.getBoard();
+        const std::string mover = board.getCell(from);
+        if (mover.size() == 2) {
+            const char color = mover[0];
+            if (arbiter.hasActiveMotion(color)) {
+                return { false, "move_in_flight" };
+            }
+            const char opponent = color == 'w' ? 'b' : 'w';
+            if (arbiter.hasActiveTravel(opponent)) {
+                return { false, "common_route" };
+            }
         }
-    }
 
-    const MoveValidation validation = ruleEngine.validateMove(board, from, to);
-    if (!validation.is_valid) {
-        return { false, validation.reason };
-    }
+        const MoveValidation validation = ruleEngine.validateMove(board, from, to);
+        if (!validation.is_valid) {
+            return { false, validation.reason };
+        }
 
-    arbiter.startMotion(board.getCell(from), from, to);
-    return { true, "ok" };
+        arbiter.startMotion(board.getCell(from), from, to);
+        return { true, "ok" };
+    } catch (const std::exception&) {
+        return { false, "runtime_error" };
+    }
 }
 
 MoveResult GameEngine::requestJump(const Position& at) {
-    if (gameState.isGameOver()) {
-        return { false, "game_over" };
-    }
+    try {
+        if (gameState.isGameOver()) {
+            return { false, "game_over" };
+        }
 
-    Board& board = gameState.getBoard();
-    if (!board.isWithinBounds(at)) {
-        return { false, "outside_board" };
-    }
+        Board& board = gameState.getBoard();
+        if (!board.isWithinBounds(at)) {
+            return { false, "outside_board" };
+        }
 
-    const std::string piece = board.getCell(at);
-    if (piece == ".") {
-        return { false, "empty_source" };
-    }
-    if (arbiter.hasActiveMotion(piece[0])) {
-        return { false, "move_in_flight" };
-    }
+        const std::string piece = board.getCell(at);
+        if (piece == ".") {
+            return { false, "empty_source" };
+        }
+        if (arbiter.hasActiveMotion(piece[0])) {
+            return { false, "move_in_flight" };
+        }
 
-    arbiter.startJump(piece, at);
-    return { true, "ok" };
+        arbiter.startJump(piece, at);
+        return { true, "ok" };
+    } catch (const std::exception&) {
+        return { false, "runtime_error" };
+    }
 }
 
 void GameEngine::wait(int ms) {
+    if (ms < 0) {
+        throw std::invalid_argument("wait milliseconds must be non-negative");
+    }
+
     const std::vector<ArrivalEvent> arrivals = arbiter.advanceTime(ms, gameState.getBoard());
     for (const ArrivalEvent& arrival : arrivals) {
         if (isKing(arrival.capturedPiece)) {

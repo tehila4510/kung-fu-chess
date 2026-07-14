@@ -15,6 +15,14 @@ alwaysApply: false
 
 Model types must be usable without knowing about realtime, I/O, or rendering.
 
+### Exceptions in model
+
+- Validate preconditions; throw `std::invalid_argument` or `std::out_of_range` — **never** try-catch in `model/`
+- `Board::getCell` / `setCell` throw on out-of-bounds access
+- `Piece::fromToken` throws on malformed tokens ( `"."` returns empty piece)
+- `GameState::initialize` throws on empty board dimensions
+- Let callers at `engine/` / `rules/` / `ScriptRunner` handle or translate errors
+
 ## Rules (`rules/`)
 
 - Each piece implements `IPieceRules::isValidMove(from, to, board)` in its own `rules/*Rules.{h,cpp}` (e.g. `RookRules`, `PawnRules`)
@@ -35,3 +43,9 @@ struct MoveValidation {
 2. Register it by kind in the `RuleEngine` constructor map
 3. Add focused unit test under `tests/MoveRules*Test.cpp`
 4. Do not add piece-specific branches inside `RuleEngine`
+
+### Exceptions in rules
+
+- `RuleEngine::validateMove` is a **boundary catcher**: wrap `Piece::fromToken` / board access in try-catch; return `{ false, "invalid_piece" }` — do not rethrow or log
+- `PieceRules` helpers (e.g. `pieceAt`) may catch silently and return `std::nullopt` so `isValidMove` returns `false`
+- Piece rule classes themselves do not catch — they consume validated `Piece` values from helpers

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <stdexcept>
 
 namespace {
 
@@ -16,10 +17,24 @@ std::string promotePawnIfNeeded(const std::string& piece, const Position& to, in
 }
 
 int colorIndex(char color) {
+    if (color != 'w' && color != 'b') {
+        throw std::invalid_argument("Piece color must be 'w' or 'b'");
+    }
     return color == 'w' ? 0 : 1;
 }
 
+void validatePieceTokenOrThrow(const std::string& piece) {
+    if (piece.size() != 2) {
+        throw std::invalid_argument("Motion piece token must be exactly two characters");
+    }
+    colorIndex(piece[0]);
+    static const std::string kinds = "KQRBNP";
+    if (kinds.find(piece[1]) == std::string::npos) {
+        throw std::invalid_argument("Invalid motion piece kind");
+    }
 }
+
+} // namespace
 
 bool RealTimeArbiter::hasActiveMotion() const {
     return active[0].has_value() || active[1].has_value();
@@ -35,15 +50,29 @@ bool RealTimeArbiter::hasActiveTravel(char color) const {
 }
 
 void RealTimeArbiter::startMotion(const std::string& piece, const Position& from, const Position& to) {
+    validatePieceTokenOrThrow(piece);
+    if (!from.isValid() || !to.isValid()) {
+        throw std::out_of_range("Motion endpoints must have non-negative coordinates");
+    }
+
     const long long durationMs = static_cast<long long>(from.chebyshevDistanceTo(to)) * 1000;
     active[colorIndex(piece[0])] = Motion{ from, to, piece, clockMs + durationMs, nextStartSeq++ };
 }
 
 void RealTimeArbiter::startJump(const std::string& piece, const Position& at) {
+    validatePieceTokenOrThrow(piece);
+    if (!at.isValid()) {
+        throw std::out_of_range("Jump position must have non-negative coordinates");
+    }
+
     active[colorIndex(piece[0])] = Motion{ at, at, piece, clockMs + kJumpDurationMs, nextStartSeq++ };
 }
 
 std::vector<ArrivalEvent> RealTimeArbiter::advanceTime(int ms, Board& board) {
+    if (ms < 0) {
+        throw std::invalid_argument("advanceTime milliseconds must be non-negative");
+    }
+
     clockMs += ms;
 
     std::vector<ArrivalEvent> arrivals;
@@ -58,7 +87,6 @@ std::vector<ArrivalEvent> RealTimeArbiter::advanceTime(int ms, Board& board) {
         return false;
     };
 
-   
     std::array<int, kColorCount> travelOrder{};
     int travelCount = 0;
     for (int i = 0; i < kColorCount; ++i) {

@@ -2,8 +2,13 @@
 
 #include <iostream>
 #include <ostream>
+#include <stdexcept>
 
 void BoardPrinter::print(const Board& board, std::ostream& out) const {
+    if (!out) {
+        throw std::runtime_error("Output stream is not writable");
+    }
+
     const int rows = board.getRowCount();
     const int cols = board.getColCount();
     for (int r = 0; r < rows; ++r) {

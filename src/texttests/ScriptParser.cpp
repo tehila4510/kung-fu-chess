@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace {
@@ -21,13 +22,22 @@ ScriptCommand parseCommandLine(const std::string& line) {
     ScriptCommand cmd;
     if (verb == "click") {
         cmd.kind = ScriptCommandKind::Click;
-        iss >> cmd.x >> cmd.y;
+        if (!(iss >> cmd.x >> cmd.y)) {
+            throw std::invalid_argument("click command requires X and Y coordinates");
+        }
     } else if (verb == "jump") {
         cmd.kind = ScriptCommandKind::Jump;
-        iss >> cmd.x >> cmd.y;
+        if (!(iss >> cmd.x >> cmd.y)) {
+            throw std::invalid_argument("jump command requires X and Y coordinates");
+        }
     } else if (verb == "wait") {
         cmd.kind = ScriptCommandKind::Wait;
-        iss >> cmd.ms;
+        if (!(iss >> cmd.ms)) {
+            throw std::invalid_argument("wait command requires a millisecond value");
+        }
+        if (cmd.ms < 0) {
+            throw std::invalid_argument("wait command milliseconds must be non-negative");
+        }
     } else if (verb == "print") {
         std::string arg;
         iss >> arg;
@@ -38,11 +48,14 @@ ScriptCommand parseCommandLine(const std::string& line) {
     return cmd;
 }
 
-}
+} // namespace
 
 ScriptParseResult ScriptParser::parse(std::istream& input) const {
-    ScriptParseResult result;
+    if (!input) {
+        throw std::runtime_error("Input stream is not readable");
+    }
 
+    ScriptParseResult result;
     const BoardParseResult boardResult = BoardParser().parse(input);
     result.board = boardResult.board;
     result.boardStatus = boardResult.status;
