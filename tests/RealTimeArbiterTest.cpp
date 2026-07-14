@@ -38,7 +38,7 @@ TEST_CASE("RealTimeArbiter times and resolves motion") {
 
         CHECK(arb.advanceTime(2999, board).empty());
         CHECK(arb.hasActiveMotion());
-        CHECK(board.getCell({ 0, 0 }) == "wR");
+        CHECK(board.getCell({ 0, 0 }).getContent() == "wR");
     }
 
     SUBCASE("arrival moves the piece and clears the motion") {
@@ -50,8 +50,8 @@ TEST_CASE("RealTimeArbiter times and resolves motion") {
         REQUIRE(arrivals.size() == 1);
         CHECK(arrivals[0].at == Position{ 0, 3 });
         CHECK(arrivals[0].capturedPiece == ".");
-        CHECK(board.getCell({ 0, 3 }) == "wR");
-        CHECK(board.getCell({ 0, 0 }) == ".");
+        CHECK(board.getCell({ 0, 3 }).getContent() == "wR");
+        CHECK(board.getCell({ 0, 0 }).getContent() == ".");
         CHECK_FALSE(arb.hasActiveMotion());
     }
 
@@ -63,7 +63,7 @@ TEST_CASE("RealTimeArbiter times and resolves motion") {
         auto arrivals = arb.advanceTime(3000, board);
         REQUIRE(arrivals.size() == 1);
         CHECK(arrivals[0].capturedPiece == "bK");
-        CHECK(board.getCell({ 0, 3 }) == "wR");
+        CHECK(board.getCell({ 0, 3 }).getContent() == "wR");
     }
 
     SUBCASE("pawn promotes on the far rank") {
@@ -75,7 +75,7 @@ TEST_CASE("RealTimeArbiter times and resolves motion") {
 
         auto arrivals = arb.advanceTime(1000, board);
         REQUIRE(arrivals.size() == 1);
-        CHECK(board.getCell({ 0, 0 }) == "wQ");
+        CHECK(board.getCell({ 0, 0 }).getContent() == "wQ");
     }
 
     SUBCASE("both colors move simultaneously and resolve together") {
@@ -91,8 +91,8 @@ TEST_CASE("RealTimeArbiter times and resolves motion") {
 
         auto arrivals = arb.advanceTime(2000, board);
         CHECK(arrivals.size() == 2);
-        CHECK(board.getCell({ 0, 2 }) == "wR");
-        CHECK(board.getCell({ 1, 1 }) == "bR");
+        CHECK(board.getCell({ 0, 2 }).getContent() == "wR");
+        CHECK(board.getCell({ 1, 1 }).getContent() == "bR");
         CHECK_FALSE(arb.hasActiveMotion());
     }
 

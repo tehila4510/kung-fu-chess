@@ -17,7 +17,8 @@ MoveResult GameEngine::requestMove(const Position& from, const Position& to) {
         }
 
         Board& board = gameState.getBoard();
-        const std::string mover = board.getCell(from);
+        const Cell& moverCell = board.getCell(from);
+        const std::string& mover = moverCell.getContent();
         if (mover.size() == 2) {
             const char color = mover[0];
             if (arbiter.hasActiveMotion(color)) {
@@ -34,7 +35,7 @@ MoveResult GameEngine::requestMove(const Position& from, const Position& to) {
             return { false, validation.reason };
         }
 
-        arbiter.startMotion(board.getCell(from), from, to);
+        arbiter.startMotion(moverCell.getContent(), from, to);
         return { true, "ok" };
     } catch (const std::exception&) {
         return { false, "runtime_error" };
@@ -52,8 +53,9 @@ MoveResult GameEngine::requestJump(const Position& at) {
             return { false, "outside_board" };
         }
 
-        const std::string piece = board.getCell(at);
-        if (piece == ".") {
+        const Cell& cell = board.getCell(at);
+        const std::string& piece = cell.getContent();
+        if (cell.isEmpty()) {
             return { false, "empty_source" };
         }
         if (arbiter.hasActiveMotion(piece[0])) {

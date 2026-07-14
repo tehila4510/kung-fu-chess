@@ -104,7 +104,7 @@ std::vector<ArrivalEvent> RealTimeArbiter::advanceTime(int ms, Board& board) {
         const Motion motion = *slot;
         slot.reset();
 
-        std::string capturedPiece = board.getCell(motion.to);
+        std::string capturedPiece = board.getCell(motion.to).getContent();
         if (isJumpLandingHere(motion.to)) {
             capturedPiece = ".";
         }
@@ -124,7 +124,7 @@ std::vector<ArrivalEvent> RealTimeArbiter::advanceTime(int ms, Board& board) {
         const Motion motion = *slot;
         slot.reset();
 
-        const std::string occupant = board.getCell(motion.to);
+        const std::string occupant = board.getCell(motion.to).getContent();
         const std::string capturedPiece = (occupant == "." || occupant == motion.piece) ? "." : occupant;
 
         board.setCell(motion.to, motion.piece);

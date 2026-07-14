@@ -37,9 +37,9 @@ TEST_CASE("BoardParser derives dimensions dynamically, without hardcoded 8x8") {
         CHECK(result.status == BoardParseStatus::Ok);
         CHECK(result.board->getRowCount() == 3);
         CHECK(result.board->getColCount() == 4);
-        CHECK(result.board->getCell(Position{ 0, 0 }) == "wR");
-        CHECK(result.board->getCell(Position{ 0, 3 }) == "bK");
-        CHECK(result.board->getCell(Position{ 2, 2 }) == "wP");
+        CHECK(result.board->getCell(Position{ 0, 0 }).getContent() == "wR");
+        CHECK(result.board->getCell(Position{ 0, 3 }).getContent() == "bK");
+        CHECK(result.board->getCell(Position{ 2, 2 }).getContent() == "wP");
     }
 
     SUBCASE("5 x 5") {
@@ -52,8 +52,8 @@ TEST_CASE("BoardParser derives dimensions dynamically, without hardcoded 8x8") {
         REQUIRE(result.board.has_value());
         CHECK(result.board->getRowCount() == 5);
         CHECK(result.board->getColCount() == 5);
-        CHECK(result.board->getCell(Position{ 0, 3 }) == "bQ");
-        CHECK(result.board->getCell(Position{ 4, 4 }) == "wK");
+        CHECK(result.board->getCell(Position{ 0, 3 }).getContent() == "bQ");
+        CHECK(result.board->getCell(Position{ 4, 4 }).getContent() == "wK");
     }
 
     SUBCASE("full 8 x 8") {
@@ -69,7 +69,7 @@ TEST_CASE("BoardParser derives dimensions dynamically, without hardcoded 8x8") {
         REQUIRE(result.board.has_value());
         CHECK(result.board->getRowCount() == 8);
         CHECK(result.board->getColCount() == 8);
-        CHECK(result.board->getCell(Position{ 7, 4 }) == "wK");
+        CHECK(result.board->getCell(Position{ 7, 4 }).getContent() == "wK");
     }
 }
 

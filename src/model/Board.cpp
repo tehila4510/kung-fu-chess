@@ -26,36 +26,32 @@ void validateWithinBoundsOrThrow(const Board& board, const Position& pos) {
 
 } // namespace
 
-Board::Board(std::vector<std::vector<std::string>> initialGrid)
-    : grid(std::move(initialGrid)),
-      rows(static_cast<int>(grid.size())),
-      cols(grid.empty() ? 0 : static_cast<int>(grid.front().size())) {
-    validateRectangularGrid(grid);
+Board::Board(std::vector<std::vector<std::string>> initialGrid) {
+    validateRectangularGrid(initialGrid);
+    rows = static_cast<int>(initialGrid.size());
+    cols = initialGrid.empty() ? 0 : static_cast<int>(initialGrid.front().size());
+    grid.reserve(static_cast<size_t>(rows) * static_cast<size_t>(cols));
+    for (const std::vector<std::string>& row : initialGrid) {
+        for (const std::string& token : row) {
+            grid.emplace_back(token);
+        }
+    }
+}
+
+int Board::getIndex(const Position& pos) const {
+    return pos.row * cols + pos.col;
 }
 
 bool Board::isWithinBounds(const Position& pos) const {
     return pos.row >= 0 && pos.row < rows && pos.col >= 0 && pos.col < cols;
 }
 
-std::string Board::getCell(const Position& pos) const {
+const Cell& Board::getCell(const Position& pos) const {
     validateWithinBoundsOrThrow(*this, pos);
-    return grid[pos.row][pos.col];
+    return grid[static_cast<size_t>(getIndex(pos))];
 }
 
-void Board::setCell(const Position& pos, const std::string& val) {
+void Board::setCell(const Position& pos, const std::string val) {
     validateWithinBoundsOrThrow(*this, pos);
-    grid[pos.row][pos.col] = val;
-}
-
-bool Board::isEmpty(const Position& pos) const {
-    validateWithinBoundsOrThrow(*this, pos);
-    return grid[pos.row][pos.col] == ".";
-}
-
-bool Board::isFriendly(const Position& pos, char color) const {
-    validateWithinBoundsOrThrow(*this, pos);
-    if (grid[pos.row][pos.col] == ".") {
-        return false;
-    }
-    return grid[pos.row][pos.col][0] == color;
+    grid[static_cast<size_t>(getIndex(pos))] = Cell(std::move(val));
 }

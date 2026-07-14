@@ -15,10 +15,11 @@ void addSlidingMoves(const Board& board, const Piece& piece,
         int col = piece.position.col + d.second;
         while (inBounds(board, row, col)) {
             Position p{ row, col };
-            if (board.isEmpty(p)) {
+            const Cell& cell = board.getCell(p);
+            if (cell.isEmpty()) {
                 out.insert(p);
             } else {
-                if (!board.isFriendly(p, piece.color)) {
+                if (cell.getColor() != piece.color) {
                     out.insert(p);
                 }
                 break;
@@ -38,7 +39,8 @@ void addStepMoves(const Board& board, const Piece& piece,
             continue;
         }
         Position p{ row, col };
-        if (!board.isFriendly(p, piece.color)) {
+        const Cell& cell = board.getCell(p);
+        if (cell.isEmpty() || cell.getColor() != piece.color) {
             out.insert(p);
         }
     }
@@ -63,7 +65,7 @@ const std::vector<Step>& bishopDirs() {
 
 std::optional<Piece> pieceAt(const Board& board, const Position& from) {
     try {
-        return Piece::fromToken(board.getCell(from), from);
+        return Piece::fromToken(board.getCell(from).getContent(), from);
     } catch (const std::exception&) {
         return std::nullopt;
     }
@@ -144,22 +146,24 @@ bool PawnRules::isValidMove(const Position& from, const Position& to, const Boar
     const int col = piece->position.col;
 
     Position oneForward{ row + forward, col };
-    if (piece_rules::inBounds(board, oneForward.row, oneForward.col) && board.isEmpty(oneForward)) {
+    if (piece_rules::inBounds(board, oneForward.row, oneForward.col)
+        && board.getCell(oneForward).isEmpty()) {
         legal.insert(oneForward);
 
         Position twoForward{ row + 2 * forward, col };
         if (piece_rules::isPawnInitialRow(row, piece->color, rows)
             && piece_rules::inBounds(board, twoForward.row, twoForward.col)
-            && board.isEmpty(twoForward)) {
+            && board.getCell(twoForward).isEmpty()) {
             legal.insert(twoForward);
         }
     }
 
     for (int dc : { -1, 1 }) {
         Position capture{ row + forward, col + dc };
+        const Cell& captureCell = board.getCell(capture);
         if (piece_rules::inBounds(board, capture.row, capture.col)
-            && !board.isEmpty(capture)
-            && !board.isFriendly(capture, piece->color)) {
+            && !captureCell.isEmpty()
+            && captureCell.getColor() != piece->color) {
             legal.insert(capture);
         }
     }

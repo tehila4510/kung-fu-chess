@@ -14,7 +14,7 @@ void BoardPrinter::print(const Board& board, std::ostream& out) const {
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < cols; ++c) {
             if (c) out << ' ';
-            out << board.getCell(Position{ r, c });
+            out << board.getCell(Position{ r, c }).getContent();
         }
         out << '\n';
     }

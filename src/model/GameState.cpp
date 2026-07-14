@@ -45,7 +45,7 @@ GameSnapshot GameState::createSnapshot() const {
         std::vector<std::string> row;
         row.reserve(static_cast<size_t>(cols));
         for (int c = 0; c < cols; ++c) {
-            row.push_back(board.getCell(Position{ r, c }));
+            row.push_back(board.getCell(Position{ r, c }).getContent());
         }
         snap.cells.push_back(std::move(row));
     }

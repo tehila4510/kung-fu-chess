@@ -2,12 +2,12 @@
 #include "rules/PieceRules.h"
 
 RuleEngine::RuleEngine() {
-    rules['R'] = std::unique_ptr<IPieceRules>(new RookRules());
-    rules['B'] = std::unique_ptr<IPieceRules>(new BishopRules());
-    rules['Q'] = std::unique_ptr<IPieceRules>(new QueenRules());
-    rules['N'] = std::unique_ptr<IPieceRules>(new KnightRules());
-    rules['K'] = std::unique_ptr<IPieceRules>(new KingRules());
-    rules['P'] = std::unique_ptr<IPieceRules>(new PawnRules());
+    rules['R'] = std::make_unique<RookRules>();
+rules['B'] = std::make_unique<BishopRules>();
+rules['Q'] = std::make_unique<QueenRules>();
+rules['N'] = std::make_unique<KnightRules>();
+rules['K'] = std::make_unique<KingRules>();
+rules['P'] = std::make_unique<PawnRules>();
 }
 
 MoveValidation RuleEngine::validateMove(const Board& board, const Position& from, const Position& to) const {
@@ -16,16 +16,17 @@ MoveValidation RuleEngine::validateMove(const Board& board, const Position& from
             return { false, "outside_board" };
         }
 
-        const std::string token = board.getCell(from);
-        if (token == ".") {
+        const Cell& fromCell = board.getCell(from);
+        if (fromCell.isEmpty()) {
             return { false, "empty_source" };
         }
 
-        if (board.isFriendly(to, token[0])) {
+        const Cell& toCell = board.getCell(to);
+        if (!toCell.isEmpty() && toCell.getColor() == fromCell.getColor()) {
             return { false, "friendly_destination" };
         }
 
-        const Piece piece = Piece::fromToken(token, from);
+        const Piece piece = Piece::fromToken(fromCell.getContent(), from);
         const auto it = rules.find(piece.kind);
         if (it == rules.end() || !it->second->isValidMove(from, to, board)) {
             return { false, "illegal_piece_move" };
