@@ -10,13 +10,19 @@ void GameEngine::setup(Board initialBoard) {
     gameState.initialize(std::move(initialBoard));
 }
 
-MoveResult GameEngine::requestMove(const Position& from, const Position& to) {
+MoveOutcome GameEngine::requestMove(const Position& from, const Position& to) {
     try {
         if (gameState.isGameOver()) {
             return { false, "game_over" };
         }
 
         Board& board = gameState.getBoard();
+
+        const MoveValidation validation = ruleEngine.validateMove(board, from, to);
+        if (!validation.is_valid) {
+            return { false, toString(validation.reason) };
+        }
+
         const Cell& moverCell = board.getCell(from);
         const std::string& mover = moverCell.getContent();
         if (mover.size() == 2) {
@@ -30,11 +36,6 @@ MoveResult GameEngine::requestMove(const Position& from, const Position& to) {
             }
         }
 
-        const MoveValidation validation = ruleEngine.validateMove(board, from, to);
-        if (!validation.is_valid) {
-            return { false, validation.reason };
-        }
-
         arbiter.startMotion(moverCell.getContent(), from, to);
         return { true, "ok" };
     } catch (const std::exception&) {
@@ -42,7 +43,7 @@ MoveResult GameEngine::requestMove(const Position& from, const Position& to) {
     }
 }
 
-MoveResult GameEngine::requestJump(const Position& at) {
+MoveOutcome GameEngine::requestJump(const Position& at) {
     try {
         if (gameState.isGameOver()) {
             return { false, "game_over" };

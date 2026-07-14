@@ -7,9 +7,20 @@
 #include <string>
 #include <unordered_map>
 
+enum class MoveResult {
+    Ok,
+    OutsideBoard,
+    EmptySource,
+    FriendlyDestination,
+    IllegalPieceMove,
+    InvalidPiece
+};
+
+std::string toString(MoveResult reason);
+
 struct MoveValidation {
     bool is_valid;
-    std::string reason; // "ok" | "outside_board" | "empty_source" | "friendly_destination" | "illegal_piece_move"
+    MoveResult reason;
 };
 
 class RuleEngine {

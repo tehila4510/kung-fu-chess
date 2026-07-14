@@ -5,7 +5,7 @@
 #include "rules/RuleEngine.h"
 #include "realtime/RealTimeArbiter.h"
 
-struct MoveResult { bool is_accepted; std::string reason; };
+struct MoveOutcome { bool is_accepted; std::string reason; };
 
 class GameEngine {
     GameState gameState;
@@ -13,8 +13,8 @@ class GameEngine {
     RealTimeArbiter arbiter;
 public:
     void setup(Board board);
-    MoveResult requestMove(const Position& from, const Position& to);
-    MoveResult requestJump(const Position& at);
+    MoveOutcome requestMove(const Position& from, const Position& to);
+    MoveOutcome requestJump(const Position& at);
     void wait(int ms);
     GameSnapshot snapshot() const;
     bool isGameOver() const;

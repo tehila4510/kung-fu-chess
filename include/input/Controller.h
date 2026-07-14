@@ -13,7 +13,7 @@ enum class ClickOutcome {
 
 struct ClickResult {
     ClickOutcome outcome = ClickOutcome::Ignored;
-    MoveResult moveResult{ false, "" };
+    MoveOutcome moveResult{ false, "" };
 };
 
 
@@ -27,7 +27,7 @@ public:
     explicit Controller(GameEngine& engine, int cellSize = 100);
     Controller(GameEngine& engine, BoardMapper mapper);
     ClickResult click(int x, int y);
-    MoveResult jump(int x, int y);
+    MoveOutcome jump(int x, int y);
     bool hasActiveSelection() const;
     Position selectedCell() const;
     void clearSelection();

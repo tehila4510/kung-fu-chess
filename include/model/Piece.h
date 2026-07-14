@@ -2,6 +2,7 @@
 #define PIECE_H
 
 #include "model/Position.h"
+#include <optional>
 #include <string>
 
 struct Piece {
@@ -15,6 +16,7 @@ struct Piece {
     Piece() = default;
     Piece(char color, char kind, Position position);
 
+    static std::optional<Piece> tryFromToken(const std::string& token, Position at);
     static Piece fromToken(const std::string& token, Position at);
 
     std::string toToken() const;

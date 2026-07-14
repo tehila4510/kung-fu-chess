@@ -1,5 +1,6 @@
 #include "model/Piece.h"
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -65,15 +66,29 @@ Piece::Piece(char color, char kind, Position position)
     }
 }
 
-Piece Piece::fromToken(const std::string& token, Position at) {
-    validateTokenOrThrow(token);
-
+std::optional<Piece> Piece::tryFromToken(const std::string& token, Position at) {
     if (token == ".") {
         return Piece();
     }
-
-    validatePositionOrThrow(at);
+    if (token.size() != 2) {
+        return std::nullopt;
+    }
+    if (!isValidActiveColor(token[0]) || !isValidActiveKind(token[1])) {
+        return std::nullopt;
+    }
+    if (!at.isValid()) {
+        return std::nullopt;
+    }
     return Piece(token[0], token[1], at);
+}
+
+Piece Piece::fromToken(const std::string& token, Position at) {
+    const std::optional<Piece> piece = tryFromToken(token, at);
+    if (!piece) {
+        validateTokenOrThrow(token);
+        validatePositionOrThrow(at);
+    }
+    return *piece;
 }
 
 std::string Piece::toToken() const {

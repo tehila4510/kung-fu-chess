@@ -64,11 +64,7 @@ const std::vector<Step>& bishopDirs() {
 }
 
 std::optional<Piece> pieceAt(const Board& board, const Position& from) {
-    try {
-        return Piece::fromToken(board.getCell(from).getContent(), from);
-    } catch (const std::exception&) {
-        return std::nullopt;
-    }
+    return Piece::tryFromToken(board.getCell(from).getContent(), from);
 }
 
 } // namespace piece_rules

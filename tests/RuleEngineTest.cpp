@@ -19,6 +19,10 @@ Board loadBoard(const std::vector<std::string>& rows) {
     return std::move(*parsed.board);
 }
 
+bool hasReason(const MoveValidation& v, MoveResult expected) {
+    return v.reason == expected;
+}
+
 }
 
 TEST_CASE("RuleEngine.validateMove reports reasons") {
@@ -26,22 +30,22 @@ TEST_CASE("RuleEngine.validateMove reports reasons") {
 
     SUBCASE("out of bounds") {
         Board board = loadBoard({ ". wK . .", ". . . ." });
-        CHECK(engine.validateMove(board, { 0, 1 }, { 5, 5 }).reason == "outside_board");
-        CHECK(engine.validateMove(board, { 5, 5 }, { 0, 1 }).reason == "outside_board");
+        CHECK(toString(engine.validateMove(board, { 0, 1 }, { 5, 5 }).reason) == "outside_board");
+        CHECK(toString(engine.validateMove(board, { 5, 5 }, { 0, 1 }).reason) == "outside_board");
     }
 
     SUBCASE("empty source") {
         Board board = loadBoard({ ". . . ." });
         MoveValidation v = engine.validateMove(board, { 0, 0 }, { 0, 1 });
         CHECK_FALSE(v.is_valid);
-        CHECK(v.reason == "empty_source");
+        CHECK(hasReason(v, MoveResult::EmptySource));
     }
 
     SUBCASE("friendly destination") {
         Board board = loadBoard({ "wR wP . .", ". . . ." });
         MoveValidation v = engine.validateMove(board, { 0, 0 }, { 0, 1 });
         CHECK_FALSE(v.is_valid);
-        CHECK(v.reason == "friendly_destination");
+        CHECK(hasReason(v, MoveResult::FriendlyDestination));
     }
 
     SUBCASE("illegal piece move") {
@@ -52,7 +56,7 @@ TEST_CASE("RuleEngine.validateMove reports reasons") {
             ". . . ." });
         MoveValidation v = engine.validateMove(board, { 0, 0 }, { 1, 1 });
         CHECK_FALSE(v.is_valid);
-        CHECK(v.reason == "illegal_piece_move");
+        CHECK(hasReason(v, MoveResult::IllegalPieceMove));
     }
 
     SUBCASE("legal move accepted") {
@@ -63,6 +67,6 @@ TEST_CASE("RuleEngine.validateMove reports reasons") {
             ". . . ." });
         MoveValidation v = engine.validateMove(board, { 0, 0 }, { 0, 3 });
         CHECK(v.is_valid);
-        CHECK(v.reason == "ok");
+        CHECK(hasReason(v, MoveResult::Ok));
     }
 }

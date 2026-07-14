@@ -35,7 +35,7 @@ TEST_CASE("GameEngine orchestrates moves, timing and game over") {
 
     SUBCASE("a legal move is accepted") {
         GameEngine engine = loadEngine({ "wR . . ." });
-        const MoveResult result = engine.requestMove({ 0, 0 }, { 0, 3 });
+        const MoveOutcome result = engine.requestMove({ 0, 0 }, { 0, 3 });
         CHECK(result.is_accepted);
     }
 
@@ -46,7 +46,7 @@ TEST_CASE("GameEngine orchestrates moves, timing and game over") {
             "bR . . ." });
 
         CHECK(engine.requestMove({ 0, 0 }, { 0, 3 }).is_accepted);
-        const MoveResult second = engine.requestMove({ 0, 0 }, { 0, 1 });
+        const MoveOutcome second = engine.requestMove({ 0, 0 }, { 0, 1 });
         CHECK_FALSE(second.is_accepted);
         CHECK(second.reason == "move_in_flight");
     }
@@ -58,7 +58,7 @@ TEST_CASE("GameEngine orchestrates moves, timing and game over") {
             "bR . . ." });
 
         CHECK(engine.requestMove({ 0, 0 }, { 0, 3 }).is_accepted);
-        const MoveResult second = engine.requestMove({ 2, 0 }, { 2, 3 });
+        const MoveOutcome second = engine.requestMove({ 2, 0 }, { 2, 3 });
         CHECK_FALSE(second.is_accepted);
         CHECK(second.reason == "common_route");
     }
@@ -71,7 +71,7 @@ TEST_CASE("GameEngine orchestrates moves, timing and game over") {
         CHECK(engine.isGameOver());
         CHECK(engine.snapshot().gameOver);
 
-        const MoveResult afterOver = engine.requestMove({ 0, 3 }, { 1, 3 });
+        const MoveOutcome afterOver = engine.requestMove({ 0, 3 }, { 1, 3 });
         CHECK_FALSE(afterOver.is_accepted);
         CHECK(afterOver.reason == "game_over");
     }

@@ -73,7 +73,7 @@ ClickResult Controller::click(int x, int y) {
 
         const Position from = selection;
         clearSelection();
-        const MoveResult result = engine.requestMove(from, cell);
+        const MoveOutcome result = engine.requestMove(from, cell);
         return { ClickOutcome::MoveRequested, result };
     } catch (const std::exception&) {
         clearSelection();
@@ -81,7 +81,7 @@ ClickResult Controller::click(int x, int y) {
     }
 }
 
-MoveResult Controller::jump(int x, int y) {
+MoveOutcome Controller::jump(int x, int y) {
     try {
         const std::optional<Position> mapped = mapper.pixelToCell(x, y);
         if (!mapped) {
