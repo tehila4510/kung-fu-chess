@@ -10,7 +10,7 @@ C++17 console game that reads board setup and commands from stdin.
 ```
 include/
 ├── model/       Board, Piece, Position, GameState
-├── rules/       IPieceRule strategies, RuleEngine
+├── rules/       IPieceRules strategies (one *Rules.{h,cpp} per piece), RuleEngine
 ├── realtime/    Motion, RealTimeArbiter
 ├── engine/      GameEngine
 ├── io/          BoardParser, BoardPrinter (IBoardPrinter)
@@ -51,7 +51,7 @@ main/App → input/view/io → engine → rules/realtime → model
 | Layer | Key types | Responsibility |
 |-------|-----------|----------------|
 | Model | `Board`, `Piece`, `Position`, `GameState` | Grid data, bounds, cell access — no I/O or rules |
-| Rules | `IPieceRule`, `RuleEngine` | Per-piece move legality via Strategy pattern |
+| Rules | `IPieceRules`, `RuleEngine` | Per-piece move legality via Strategy pattern |
 | Realtime | `Motion`, `RealTimeArbiter` | Timed movement, arrival and capture resolution |
 | Engine | `GameEngine` | Orchestrates model + rules + realtime; exposes `MoveResult`, `GameSnapshot` |
 | I/O | `BoardParser`, `BoardPrinter` | Parse and serialize board text |
@@ -98,7 +98,7 @@ if the cell is empty or that color already has a motion in flight.
 - Keep changes minimal and focused on the requested task
 - Place logic in the correct layer — not in `main`
 - Match naming: PascalCase classes, camelCase methods
-- Use `ruleFor(kind)` factory — no piece-specific branches in `RuleEngine`
+- Register piece rules by kind in the `RuleEngine` constructor map — no piece-specific branches in `validateMove`
 - Do not add external libraries — use STL only
 - Do not commit `build/` artifacts unless explicitly asked
 - Register new `.cpp` files in both `build.bat` and `CMakeLists.txt`

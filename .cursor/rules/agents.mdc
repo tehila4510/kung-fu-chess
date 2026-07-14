@@ -45,7 +45,7 @@ alwaysApply: true
 ```
 include/
 ├── model/       Board, Piece, Position, GameState
-├── rules/       IPieceRule strategies, RuleEngine
+├── rules/       IPieceRules strategies (one *Rules.{h,cpp} per piece), RuleEngine
 ├── realtime/    Motion, RealTimeArbiter
 ├── engine/      GameEngine
 ├── io/          BoardParser, BoardPrinter (IBoardPrinter)
@@ -72,7 +72,7 @@ main/App → input/view/io → engine → rules/realtime → model
 | Layer | Key types | Responsibility |
 |-------|-----------|----------------|
 | Model | `Board`, `Piece`, `Position`, `GameState` | Grid data, bounds — no I/O or rules |
-| Rules | `IPieceRule`, `RuleEngine` | Move legality via Strategy pattern |
+| Rules | `IPieceRules`, `RuleEngine` | Move legality via Strategy pattern |
 | Realtime | `Motion`, `RealTimeArbiter` | Timed movement, capture on arrival |
 | Engine | `GameEngine` | Orchestrates model + rules + realtime |
 | I/O | `BoardParser`, `BoardPrinter` | Parse/serialize board text |
@@ -82,7 +82,7 @@ main/App → input/view/io → engine → rules/realtime → model
 
 ### Patterns
 
-- **Strategy**: `IPieceRule` per piece; `ruleFor(kind)` factory
+- **Strategy**: `IPieceRules` per piece; `RuleEngine` maps kind → strategy (`unordered_map<char, unique_ptr<IPieceRules>>`)
 - **DTO**: `MoveResult`, `MoveValidation`, `GameSnapshot`, `ArrivalEvent`
 - **Facade**: `GameEngine` is the single game-logic entry point
 - **Snapshot**: view never mutates `Board` directly

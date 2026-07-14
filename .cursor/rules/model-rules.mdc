@@ -17,8 +17,9 @@ Model types must be usable without knowing about realtime, I/O, or rendering.
 
 ## Rules (`rules/`)
 
-- Each piece implements `IPieceRule::legalDestinations(board, piece)`
-- `RuleEngine::validateMove` composes: bounds → source nonempty → not friendly dest → piece rule
+- Each piece implements `IPieceRules::isValidMove(from, to, board)` in its own `rules/*Rules.{h,cpp}` (e.g. `RookRules`, `PawnRules`)
+- `RuleEngine` owns an `unordered_map<char, unique_ptr<IPieceRules>>` populated in its constructor
+- `RuleEngine::validateMove` composes: bounds → source nonempty → not friendly dest → piece rule lookup in the map
 - Return `MoveValidation` with machine-readable `reason` strings in English
 
 ```cpp
@@ -30,7 +31,7 @@ struct MoveValidation {
 
 ## Extending piece behavior
 
-1. Add a new class implementing `IPieceRule`
-2. Register it in `ruleFor(char kind)` factory
+1. Add a new class implementing `IPieceRules` in its own `rules/*Rules.{h,cpp}`
+2. Register it by kind in the `RuleEngine` constructor map
 3. Add focused unit test under `tests/MoveRules*Test.cpp`
 4. Do not add piece-specific branches inside `RuleEngine`

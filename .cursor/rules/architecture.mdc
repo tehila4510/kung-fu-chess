@@ -10,7 +10,7 @@ alwaysApply: true
 | Layer | Path | Responsibility |
 |-------|------|----------------|
 | Model | `model/` | Board grid, `Piece`, `Position`, `GameState` — data only, no I/O |
-| Rules | `rules/` | `IPieceRule` strategies, `RuleEngine` move validation |
+| Rules | `rules/` | `IPieceRules` strategies, `RuleEngine` move validation |
 | Realtime | `realtime/` | `Motion`, `RealTimeArbiter` — timed movement and capture resolution |
 | Engine | `engine/` | `GameEngine` — orchestrates model + rules + realtime; no I/O |
 | I/O | `io/` | `BoardParser`, `BoardPrinter` — parse/serialize board text |
@@ -29,7 +29,7 @@ main/App → input/view/io → engine → rules/realtime → model
 
 ## Design patterns
 
-- **Strategy**: one `IPieceRule` per piece type; `ruleFor(kind)` factory returns the strategy
+- **Strategy**: one `IPieceRules` per piece type; `RuleEngine` maps piece kind → strategy via `unordered_map<char, unique_ptr<IPieceRules>>`
 - **DTO**: cross-boundary structs (`MoveResult`, `MoveValidation`, `GameSnapshot`, `ArrivalEvent`) — plain data, no behavior
 - **Facade**: `GameEngine` is the single entry point for game logic from input/I/O layers
 - **Snapshot**: view reads `GameSnapshot`; never mutates `Board` directly
