@@ -17,15 +17,12 @@ MoveOutcome GameEngine::requestMove(const Position& from, const Position& to) {
         }
 
         Board& board = gameState.getBoard();
-<<<<<<< HEAD
 
         const MoveValidation validation = ruleEngine.validateMove(board, from, to);
         if (!validation.is_valid) {
             return { false, toString(validation.reason) };
         }
 
-=======
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
         const Cell& moverCell = board.getCell(from);
         const std::string& mover = moverCell.getContent();
         if (mover.size() == 2) {
@@ -39,14 +36,6 @@ MoveOutcome GameEngine::requestMove(const Position& from, const Position& to) {
             }
         }
 
-<<<<<<< HEAD
-=======
-        const MoveValidation validation = ruleEngine.validateMove(board, from, to);
-        if (!validation.is_valid) {
-            return { false, validation.reason };
-        }
-
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
         arbiter.startMotion(moverCell.getContent(), from, to);
         return { true, "ok" };
     } catch (const std::exception&) {

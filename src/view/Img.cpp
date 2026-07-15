@@ -3,11 +3,8 @@
 #include <stdexcept>
 #include <vector>
 
-<<<<<<< HEAD
 namespace view {
 
-=======
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
 Img::Img() = default;
 
 Img& Img::read(const std::string& path,
@@ -34,13 +31,8 @@ Img& Img::read(const std::string& path,
         if (keep_aspect) {
             const double scale = std::min(static_cast<double>(target_w) / w,
                                           static_cast<double>(target_h) / h);
-<<<<<<< HEAD
             const int new_w = std::max(1, static_cast<int>(w * scale));
             const int new_h = std::max(1, static_cast<int>(h * scale));
-=======
-            const int new_w = static_cast<int>(w * scale);
-            const int new_h = static_cast<int>(h * scale);
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
             cv::resize(img, img, cv::Size(new_w, new_h), 0, 0, interpolation);
         } else {
             cv::resize(img, img, cv::Size(target_w, target_h), 0, 0, interpolation);
@@ -50,11 +42,7 @@ Img& Img::read(const std::string& path,
     return *this;
 }
 
-<<<<<<< HEAD
 void Img::draw_on(Img& other_img, int x, int y) const {
-=======
-void Img::draw_on(Img& other_img, int x, int y) {
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
     if (img.empty() || other_img.img.empty()) {
         throw std::runtime_error("Both images must be loaded before drawing.");
     }
@@ -118,7 +106,6 @@ void Img::show() const {
     cv::destroyAllWindows();
 }
 
-<<<<<<< HEAD
 Img Img::clone() const {
     Img copy;
     if (!img.empty()) {
@@ -143,8 +130,6 @@ bool Img::isWindowOpen(const std::string& window_name) {
     return cv::getWindowProperty(window_name, cv::WND_PROP_VISIBLE) >= 1.0;
 }
 
-=======
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
 const cv::Mat& Img::get_mat() const {
     return img;
 }
@@ -152,7 +137,6 @@ const cv::Mat& Img::get_mat() const {
 bool Img::is_loaded() const {
     return !img.empty();
 }
-<<<<<<< HEAD
 
 int Img::width() const {
     return img.cols;
@@ -163,5 +147,3 @@ int Img::height() const {
 }
 
 }  // namespace view
-=======
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039

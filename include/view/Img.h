@@ -5,29 +5,17 @@
 #include <string>
 #include <utility>
 
-<<<<<<< HEAD
 namespace view {
 
 class Img {
 public:
     Img();
-=======
-class Img {
-public:
-    Img();
-
-    
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
     Img& read(const std::string& path,
               const std::pair<int, int>& size = {0, 0},
               bool keep_aspect = false,
               int interpolation = cv::INTER_AREA);
 
-<<<<<<< HEAD
     void draw_on(Img& other_img, int x, int y) const;
-=======
-    void draw_on(Img& other_img, int x, int y);
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
 
     void put_text(const std::string& txt, int x, int y, double font_size,
                   const cv::Scalar& color = cv::Scalar(255, 255, 255, 255),
@@ -35,7 +23,6 @@ public:
 
     void show() const;
 
-<<<<<<< HEAD
     Img clone() const;
 
     int display(const std::string& window_name = "Kung Fu Chess",
@@ -48,18 +35,11 @@ public:
     bool is_loaded() const;
     int width() const;
     int height() const;
-=======
-    const cv::Mat& get_mat() const;
-    bool is_loaded() const;
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
 
 private:
     cv::Mat img;
 };
 
-<<<<<<< HEAD
 }  // namespace view
 
-=======
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
 #endif

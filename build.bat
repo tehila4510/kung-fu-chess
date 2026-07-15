@@ -61,11 +61,7 @@ if /i "%~1"=="graphics" (
     )
 
     call "!VCVARS!"
-<<<<<<< HEAD
     set GRAPHICS_SOURCES=src\graphics_main.cpp src\view\Img.cpp src\view\Renderer.cpp src\graphics\Animation.cpp src\graphics\AnimationLoader.cpp src\graphics\AnimationCache.cpp src\graphics\GraphicsConfigLoader.cpp src\graphics\AssetPaths.cpp src\graphics\BoardLayout.cpp
-=======
-    set GRAPHICS_SOURCES=src\graphics_main.cpp src\view\Img.cpp %ENGINE_SOURCES%
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
     cl /nologo /EHsc /std:c++17 /Iinclude /I!OPENCV_INC! !GRAPHICS_SOURCES! /Fe:build\KungFuChessGraphics.exe /link /LIBPATH:!OPENCV_BIN! opencv_world451.lib user32.lib gdi32.lib
     if errorlevel 1 exit /b 1
     copy /Y "!OPENCV_BIN!\opencv_world451.dll" build\ >nul

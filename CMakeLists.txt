@@ -65,7 +65,6 @@ add_test(NAME KungFuChessEngineTests COMMAND KungFuChessEngineTests)
 set(OPENCV_DIR "${PROJECT_SOURCE_DIR}/OpenCV_451" CACHE PATH "Bundled OpenCV root")
 
 if(EXISTS "${OPENCV_DIR}/include")
-<<<<<<< HEAD
     # Graphics target is standalone (graphics + view only) — no engine/STL logic.
     add_executable(KungFuChessGraphics
         src/graphics_main.cpp
@@ -77,12 +76,6 @@ if(EXISTS "${OPENCV_DIR}/include")
         src/graphics/GraphicsConfigLoader.cpp
         src/graphics/AssetPaths.cpp
         src/graphics/BoardLayout.cpp
-=======
-    add_executable(KungFuChessGraphics
-        src/graphics_main.cpp
-        src/view/Img.cpp
-        ${ENGINE_SOURCES}
->>>>>>> e6f4cc3a7f7702cf235ad952e4c14f4e815f3039
     )
     target_include_directories(KungFuChessGraphics PRIVATE "${OPENCV_DIR}/include")
     target_link_directories(KungFuChessGraphics PRIVATE "${OPENCV_DIR}/bin")
