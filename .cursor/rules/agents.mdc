@@ -25,15 +25,17 @@ alwaysApply: true
 | Rule file | Globs |
 |-----------|-------|
 | `cpp-files.mdc` | `src/**`, `include/**` |
+| `cpp-quality.mdc` | `src/**/*.cpp`, `src/**/*.h`, `include/**/*.h` |
 | `model-rules.mdc` | `model/`, `rules/` |
 | `engine-realtime.mdc` | `engine/`, `realtime/` |
 | `io-input-view.mdc` | `io/`, `input/`, `view/`, `texttests/`, `main.cpp`, `App` |
 
 ## Stack
 
-- C++17, STL only, no third-party deps
+- C++17, STL only for the engine, console app, and tests — no third-party deps there
 - Headers in `include/`, sources in `src/`
 - Build: `.\build.bat` builds and runs the app (`src\main.cpp` composition root); `.\build.bat test` builds and runs the engine test suite
+- **Graphics only:** use the Qama Tech `Img` wrapper (`include/view/Img.h`, `src/view/Img.cpp`) from the course repo; OpenCV is allowed **only** inside that `Img` class (bundled `OpenCV_451` for `build.bat graphics`). No other graphics or rendering libraries (SDL, SFML, GLFW, etc.). Never `#include <opencv2/...>` outside `Img.h` / `Img.cpp` — all other graphics code (`graphics/`, `Renderer`, `graphics_main`) goes through the `Img` API. `build.bat graphics` builds the single graphics entry point `src/graphics_main.cpp`, which shows the initial board (`assets/pieces/board.csv` + `assets/board.png`) with each piece playing its looping `idle` animation — no game logic yet.
 
 ## Language
 
@@ -50,7 +52,8 @@ include/
 ├── engine/      GameEngine
 ├── io/          BoardParser, BoardPrinter (IBoardPrinter)
 ├── input/       Controller, BoardMapper
-├── view/        Renderer, ImageView
+├── graphics/    Animation, AnimationLoader, AnimationCache (AnimationSpec), BoardLayout
+├── view/        Img (OpenCV wrapper), Renderer
 ├── texttests/   ScriptParser (IScriptSource), ScriptRunner, ScriptCommand
 └── App.h        Composition root
 ```
@@ -77,7 +80,8 @@ main/App → input/view/io → engine → rules/realtime → model
 | Engine | `GameEngine` | Orchestrates model + rules + realtime |
 | I/O | `BoardParser`, `BoardPrinter` | Parse/serialize board text |
 | Input | `Controller`, `BoardMapper` | Map clicks/pixels to engine calls |
-| View | `Renderer`, `ImageView` | Render `GameSnapshot` only |
+| Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout` | Load/scale sprites, play animations, read asset layout — via `Img` only |
+| View | `Img`, `Renderer` | `Img` wraps OpenCV; `Renderer` composites sprites over the board + drives the window |
 | App | `App`, `main` | Wire layers; dispatch commands |
 
 ### Patterns

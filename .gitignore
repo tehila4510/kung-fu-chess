@@ -1,10 +1,17 @@
 ﻿# Build output
 /build/
+/build-msvc/
 /bin/
 /out/
 /obj/
 /Debug/
 /Release/
+
+# Bundled OpenCV (download separately; do not commit)
+/OpenCV_451/
+
+# Game assets (sprites, board image, animation configs — obtain separately)
+/assets/
 
 # CMake / compiler generated
 CMakeFiles/

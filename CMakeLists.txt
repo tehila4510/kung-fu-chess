@@ -15,6 +15,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/tests)
 # Legacy Board/Game/MoveRules sources have been removed. The engine layer
 # (model/rules/realtime/engine/io/input) backs both the app and the tests.
 set(ENGINE_SOURCES
+    src/model/Cell.cpp
     src/model/Board.cpp
     src/model/GameState.cpp
     src/model/Piece.cpp
@@ -50,3 +51,45 @@ add_executable(KungFuChessEngineTests
 
 enable_testing()
 add_test(NAME KungFuChessEngineTests COMMAND KungFuChessEngineTests)
+
+# --- Graphics target (OpenCV) -------------------------------------------------
+# This is the ONLY target that depends on OpenCV. It must be built with MSVC,
+# because the bundled OpenCV_451 (opencv_world451.lib/.dll) is an MSVC build and
+# cannot be linked by MinGW g++. The console app + tests above stay STL-only and
+# are still built by build.bat (MinGW). Configure with, e.g.:
+#   cmake -S . -B build-msvc -G "Visual Studio 17 2022" -A x64
+#   cmake --build build-msvc --config Debug
+#
+# Place the downloaded OpenCV_451 folder at ${OPENCV_DIR} (see cpp/README of the
+# CTD26 starter). The target is skipped automatically if it is not present.
+set(OPENCV_DIR "${PROJECT_SOURCE_DIR}/OpenCV_451" CACHE PATH "Bundled OpenCV root")
+
+if(EXISTS "${OPENCV_DIR}/include")
+    # Graphics target is standalone (graphics + view only) — no engine/STL logic.
+    add_executable(KungFuChessGraphics
+        src/graphics_main.cpp
+        src/view/Img.cpp
+        src/view/Renderer.cpp
+        src/graphics/Animation.cpp
+        src/graphics/AnimationLoader.cpp
+        src/graphics/AnimationCache.cpp
+        src/graphics/GraphicsConfigLoader.cpp
+        src/graphics/AssetPaths.cpp
+        src/graphics/BoardLayout.cpp
+    )
+    target_include_directories(KungFuChessGraphics PRIVATE "${OPENCV_DIR}/include")
+    target_link_directories(KungFuChessGraphics PRIVATE "${OPENCV_DIR}/bin")
+    target_link_libraries(KungFuChessGraphics
+        $<$<CONFIG:Debug>:${OPENCV_DIR}/bin/opencv_world451d.lib>
+        $<$<NOT:$<CONFIG:Debug>>:${OPENCV_DIR}/bin/opencv_world451.lib>
+    )
+    if(WIN32)
+        add_custom_command(TARGET KungFuChessGraphics POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<$<CONFIG:Debug>:${OPENCV_DIR}/bin/opencv_world451d.dll>"
+                "$<$<NOT:$<CONFIG:Debug>>:${OPENCV_DIR}/bin/opencv_world451.dll>"
+                "$<TARGET_FILE_DIR:KungFuChessGraphics>")
+    endif()
+else()
+    message(STATUS "OpenCV_451 not found at ${OPENCV_DIR} - skipping KungFuChessGraphics target")
+endif()

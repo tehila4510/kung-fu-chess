@@ -15,7 +15,8 @@ alwaysApply: true
 | Engine | `engine/` | `GameEngine` — orchestrates model + rules + realtime; no I/O |
 | I/O | `io/` | `BoardParser`, `BoardPrinter` — parse/serialize board text |
 | Input | `input/` | `Controller`, `BoardMapper` — map user events to engine calls |
-| View | `view/` | `Renderer`, `ImageView` — render `GameSnapshot` only |
+| Graphics | `graphics/` | `Animation`, `AnimationCache` (`AnimationSpec`), `AnimationLoader`, `BoardLayout` — load/scale sprite frames, play animations, read asset board layout; depends on `Img` only |
+| View | `view/` | `Img` (OpenCV wrapper) + `Renderer` — `Renderer` composites `PlacedSprite`s over the board background and drives the window; never mutates `Board` |
 | Text tests | `texttests/` | `ScriptParser`, `ScriptRunner` — scripted stdin integration |
 | App | `App`, `main` | Composition root: wire layers, dispatch commands |
 
@@ -26,6 +27,15 @@ Dependencies point **inward only**. Outer layers may use inner; inner layers mus
 ```
 main/App → input/view/io → engine → rules/realtime → model
 ```
+
+The graphics stack sits on the view side and depends inward on `view/Img` only:
+
+```
+graphics_main → graphics/ → view(Img)
+graphics_main → view/Renderer → view(Img)
+```
+
+`graphics/` and `Renderer` must never `#include <opencv2/...>`; all pixel work goes through the `Img` API.
 
 ## Design patterns
 

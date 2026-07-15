@@ -1,0 +1,26 @@
+---
+description: Enforce clean architecture, separation of concerns, and maintainability in C++ files.
+globs: "{src/**/*.cpp,src/**/*.h,include/**/*.h}"
+alwaysApply: false
+---
+
+# C++ Architecture & Code Quality Rules
+
+Always prioritize software design quality, maintainability, and flexibility when generating or refactoring code. Follow these strict guidelines:
+
+## 1. Separation of Concerns & Clean Architecture
+
+- **No pixels in Controllers/Models**: Keep the Controller, Model, and Game Logic layers strictly independent of UI details, pixels, viewport offsets, or cell sizes. Coordinate conversions (pixel-to-cell) must live exclusively in the Adapter layer (e.g., `BoardMapper` used by the View/Input layer).
+- **Domain logic separation**: Logic rules (like chess piece movements or collision detection) must be stateless and separated into domain services (e.g., `PieceRules`), not bundled inside stateful controllers or entities.
+
+## 2. Code Flexibility & Maintainability
+
+- **Write generic and reusable code**: Avoid hardcoding values. Use template programming or configuration structures where applicable.
+- **Dependency injection**: Classes should receive their dependencies via constructor injection rather than instantiating them internally. Prefer referencing interfaces or abstraction layers.
+- **Single Responsibility Principle (SRP)**: Each class must have exactly one reason to change. If a class is handling both game rules and coordinate translation, split it.
+
+## 3. C++ Best Practices
+
+- Prefer `const` references (`const T&`) for non-primitive parameters to avoid redundant copying.
+- Use `std::optional` for operations that might fail or return empty values (like coordinate mapping).
+- Keep header files clean: forward declare types where possible instead of introducing heavy `#include` chains.

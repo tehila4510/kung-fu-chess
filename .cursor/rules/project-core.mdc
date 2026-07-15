@@ -7,9 +7,10 @@ alwaysApply: true
 
 ## Stack
 
-- C++17, STL only, no third-party deps
+- C++17, STL only for the engine, console app, and tests
 - Headers in `include/`, sources in `src/`
 - Build: `.\build.bat` or CMake
+- **Graphics only:** Qama Tech `Img` (`view/Img.h`, `view/Img.cpp`); OpenCV allowed **only** inside `Img` (bundled `OpenCV_451`). No other graphics libraries. Never `#include <opencv2/...>` outside `Img.h` / `Img.cpp`.
 
 ## Language
 
@@ -39,6 +40,7 @@ alwaysApply: true
 - Do not add tests or docs unless requested
 - Do not create git commits unless the user asks
 - Register new `.cpp` files in both `build.bat` and `CMakeLists.txt`
+- Graphics: use Qama Tech `Img` only; OpenCV allowed only in `Img.h` / `Img.cpp` — no other graphics libraries
 
 ## Exception handling
 

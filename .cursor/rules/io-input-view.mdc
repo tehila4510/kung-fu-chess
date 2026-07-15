@@ -1,6 +1,6 @@
 ---
 description: I/O, input, view, and app boundary conventions
-globs: "{include/io/**,src/io/**,include/input/**,src/input/**,include/view/**,src/view/**,include/texttests/**,src/texttests/**,src/main.cpp,include/App.h,src/App.cpp}"
+globs: "{include/io/**,src/io/**,include/input/**,src/input/**,include/view/**,src/view/**,include/graphics/**,src/graphics/**,include/texttests/**,src/texttests/**,src/main.cpp,src/graphics_main.cpp,include/App.h,src/App.cpp}"
 alwaysApply: false
 ---
 
@@ -20,7 +20,8 @@ alwaysApply: false
 |-------|------|----------|
 | `io/` | Parse/print board text | Validate moves |
 | `input/` | Map pixels/clicks → `Position` | Hold game state |
-| `view/` | Render `GameSnapshot` | Mutate `Board` |
+| `graphics/` | Load/scale sprites, play animations, read asset layout | Include OpenCV directly; hold game state |
+| `view/` | `Img` wraps OpenCV; `Renderer` composites sprites + drives window | Mutate `Board` |
 | `App` | Wire engine + I/O + input + view | Implement piece rules |
 
 ## Input flow
@@ -29,10 +30,13 @@ alwaysApply: false
 stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapshot → BoardPrinter
 ```
 
-- `BoardMapper`: pixel `(x, y)` → grid `Position` using cell size constant
-- `Controller`: translate `click` into `requestMove(from, to)` based on selection state (clicking another
-  same-color piece re-targets the selection instead of requesting a move); translate `jump` directly into
-  `requestJump(at)`
+- `BoardMapper`: pixel `(x, y)` → grid `Position` using cell size constant; owned by the caller layer
+  (e.g. `ScriptRunner`, UI loop), not by `Controller`
+- `Controller`: operates strictly on `Position` (`click(const Position&)`, `jump(const Position&)`) and
+  depends only on `GameEngine&`; the caller translates pixels via `BoardMapper::pixelToCell` first (an
+  off-board result clears the selection for clicks and is ignored for jumps). Translate `click` into
+  `requestMove(from, to)` based on selection state (clicking another same-color piece re-targets the
+  selection instead of requesting a move); translate `jump` directly into `requestJump(at)`
 - `ScriptParser`: parses the `Board:`/`Commands:` protocol into a `Board` + `ScriptCommand` list; implements
   the `IScriptSource` interface (command DTOs live in `texttests/ScriptCommand.h`)
 - `ScriptRunner`: replays parsed commands against a fresh `GameEngine`/`Controller`, writing `print board`
@@ -45,6 +49,22 @@ stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapsh
 - Receive `GameSnapshot` const reference or value copy
 - No direct `Board` access; all display data comes from the snapshot DTO
 - Keep rendering logic free of rule checks
+
+## Graphics flow (animated board — no game logic yet)
+
+```
+board.csv → graphics::BoardLayout → AnimationCache (AnimationSpec: frames+fps+loop)
+          → graphics::Animation per piece → Renderer.showFrame(PlacedSprite[]) → window
+```
+
+- `BoardLayout::loadFromCsv` reads the asset layout once (the only CSV reader)
+- `AnimationCache::get` reads `config.json` once per (piece, state, size) and caches an `AnimationSpec`;
+  `Animation`s are built from a spec in `graphics_main` (frames share reference-counted image data)
+- `Renderer` depends on `Img` only: it clones the board background, draws each `PlacedSprite`, and
+  displays one window. The render loop exits on ESC/Q **or** `Renderer::isOpen()` == false (window
+  closed) — never spin forever
+- `graphics_main.cpp` is the single graphics entry point (`build.bat graphics`); the previous
+  `main_animated_board` / `main_step1_test` demos and the empty `ImageView` were removed
 
 ## Exception handling
 
@@ -62,7 +82,8 @@ stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapsh
 
 ### View (`view/`)
 
-- `Img`: validate and throw (missing file, bad draw rect) — no try-catch; `graphics_main` is the top catcher
+- `Img`: Qama Tech course wrapper — the **only** place OpenCV is allowed (`Img.h` / `Img.cpp`); validate and throw (missing file, bad draw rect) — no try-catch; `graphics_main` is the top catcher
+- All other view/graphics code uses the `Img` API only — no direct OpenCV includes
 
 ### Text tests & app
 
