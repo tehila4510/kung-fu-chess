@@ -76,6 +76,10 @@ if(EXISTS "${OPENCV_DIR}/include")
         src/graphics/GraphicsConfigLoader.cpp
         src/graphics/AssetPaths.cpp
         src/graphics/BoardLayout.cpp
+        src/graphics/FileFrameSource.cpp
+        src/graphics/FileBoardSource.cpp
+        src/graphics/FileConfigSource.cpp
+        src/graphics/BoardLayoutLoader.cpp
     )
     target_include_directories(KungFuChessGraphics PRIVATE "${OPENCV_DIR}/include")
     target_link_directories(KungFuChessGraphics PRIVATE "${OPENCV_DIR}/bin")

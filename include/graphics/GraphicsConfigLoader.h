@@ -1,14 +1,9 @@
 #ifndef GRAPHICS_CONFIG_LOADER_H
 #define GRAPHICS_CONFIG_LOADER_H
 
-#include <string>
+#include "graphics/IConfigSource.h"
 
 namespace graphics {
-
-struct GraphicsConfig {
-    double fps = 6.0;
-    bool loop = true;
-};
 
 class GraphicsConfigLoader {
 public:

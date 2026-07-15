@@ -1,6 +1,10 @@
 #ifndef GRAPHICS_ANIMATION_CACHE_H
 #define GRAPHICS_ANIMATION_CACHE_H
 
+#include "graphics/FileConfigSource.h"
+#include "graphics/FileFrameSource.h"
+#include "graphics/IConfigSource.h"
+#include "graphics/IFrameSource.h"
 #include "view/Img.h"
 
 #include <cstddef>
@@ -34,6 +38,9 @@ struct AnimationCacheKeyHash {
 
 class AnimationCache {
 public:
+    AnimationCache();
+    AnimationCache(IFrameSource& frame_source, IConfigSource& config_source);
+
     // Loads (or returns cached) frames + config for a piece state at a size.
     const AnimationSpec& get(const std::string& piece_code,
                              const std::string& state,
@@ -43,6 +50,10 @@ private:
     static std::string makeStateDir(const std::string& piece_code,
                                     const std::string& state);
 
+    FileFrameSource owned_frame_source_;
+    FileConfigSource owned_config_source_;
+    IFrameSource& frame_source_;
+    IConfigSource& config_source_;
     std::unordered_map<AnimationCacheKey, AnimationSpec, AnimationCacheKeyHash> cache_;
 };
 

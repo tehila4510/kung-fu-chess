@@ -4,7 +4,7 @@
 #include "graphics/Animation.h"
 #include "graphics/AnimationCache.h"
 #include "graphics/AssetPaths.h"
-#include "graphics/BoardLayout.h"
+#include "graphics/BoardLayoutLoader.h"
 #include "model/Position.h"
 #include "view/Img.h"
 #include "view/Renderer.h"
@@ -87,7 +87,7 @@ int renderFrame(view::Renderer& renderer,
 int main() {
     try {
         const graphics::BoardLayout layout =
-            graphics::BoardLayout::loadFromCsv(graphics::AssetPaths::boardCsv());
+            graphics::BoardLayoutLoader{}.load(graphics::AssetPaths::boardCsv());
 
         view::Img background;
         background.read(graphics::AssetPaths::boardImage());

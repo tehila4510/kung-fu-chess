@@ -1,8 +1,6 @@
 #include "graphics/AnimationCache.h"
 
-#include "graphics/AnimationLoader.h"
 #include "graphics/AssetPaths.h"
-#include "graphics/GraphicsConfigLoader.h"
 
 #include <functional>
 #include <utility>
@@ -16,6 +14,14 @@ size_t hashCombine(size_t seed, size_t value) noexcept {
 }
 
 }  // namespace
+
+AnimationCache::AnimationCache()
+    : frame_source_(owned_frame_source_),
+      config_source_(owned_config_source_) {}
+
+AnimationCache::AnimationCache(IFrameSource& frame_source, IConfigSource& config_source)
+    : frame_source_(frame_source),
+      config_source_(config_source) {}
 
 bool AnimationCacheKey::operator==(const AnimationCacheKey& other) const {
     return piece_code == other.piece_code && state == other.state &&
@@ -46,10 +52,10 @@ const AnimationSpec& AnimationCache::get(const std::string& piece_code,
     }
 
     const std::string state_dir = makeStateDir(piece_code, state);
-    const GraphicsConfig config = GraphicsConfigLoader::load(state_dir);
+    const GraphicsConfig config = config_source_.load(state_dir);
 
     AnimationSpec spec;
-    spec.frames = AnimationLoader::loadFrames(state_dir, cell_size);
+    spec.frames = frame_source_.loadFrames(state_dir, cell_size);
     spec.fps = config.fps;
     spec.loop = config.loop;
 
