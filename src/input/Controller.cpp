@@ -1,11 +1,7 @@
 #include "input/Controller.h"
 
-Controller::Controller(GameEngine& engine, int cellSize)
-    : engine(engine),
-      mapper(cellSize, engine.columnCount(), engine.rowCount()) {}
-
-Controller::Controller(GameEngine& engine, BoardMapper mapper)
-    : engine(engine), mapper(mapper) {}
+Controller::Controller(GameEngine& engine)
+    : engine(engine) {}
 
 bool Controller::hasActiveSelection() const {
     return hasSelection;
@@ -41,15 +37,8 @@ static bool sameColor(const GameSnapshot& snap, const Position& a, const Positio
     return tokenA != "." && tokenB != "." && tokenA[0] == tokenB[0];
 }
 
-ClickResult Controller::click(int x, int y) {
+ClickResult Controller::click(const Position& cell) {
     try {
-        const std::optional<Position> mapped = mapper.pixelToCell(x, y);
-
-        if (!mapped) {
-            clearSelection();
-            return { ClickOutcome::Cleared, { false, "" } };
-        }
-        const Position cell = *mapped;
         const GameSnapshot snap = engine.snapshot();
 
         if (!hasSelection) {
@@ -81,13 +70,9 @@ ClickResult Controller::click(int x, int y) {
     }
 }
 
-MoveOutcome Controller::jump(int x, int y) {
+MoveOutcome Controller::jump(const Position& cell) {
     try {
-        const std::optional<Position> mapped = mapper.pixelToCell(x, y);
-        if (!mapped) {
-            return { false, "outside_board" };
-        }
-        return engine.requestJump(*mapped);
+        return engine.requestJump(cell);
     } catch (const std::exception&) {
         return { false, "runtime_error" };
     }

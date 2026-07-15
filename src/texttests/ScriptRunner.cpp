@@ -1,6 +1,7 @@
 #include "texttests/ScriptRunner.h"
 
 #include "engine/GameEngine.h"
+#include "input/BoardMapper.h"
 #include "input/Controller.h"
 #include "io/BoardParser.h"
 #include "io/IBoardPrinter.h"
@@ -8,6 +9,7 @@
 #include "texttests/ScriptCommand.h"
 
 #include <iostream>
+#include <optional>
 #include <ostream>
 #include <utility>
 
@@ -36,16 +38,27 @@ bool ScriptRunner::run(std::istream& input, std::ostream& output) const {
 
         GameEngine engine;
         engine.setup(std::move(*parsed.board));
-        Controller controller(engine, kCellSize);
+        Controller controller(engine);
+        const BoardMapper mapper(kCellSize, engine.columnCount(), engine.rowCount());
 
         for (const ScriptCommand& cmd : parsed.commands) {
             switch (cmd.kind) {
-                case ScriptCommandKind::Click:
-                    controller.click(cmd.x, cmd.y);
+                case ScriptCommandKind::Click: {
+                    const std::optional<Position> cell = mapper.pixelToCell(cmd.x, cmd.y);
+                    if (cell) {
+                        controller.click(*cell);
+                    } else {
+                        controller.clearSelection();
+                    }
                     break;
-                case ScriptCommandKind::Jump:
-                    controller.jump(cmd.x, cmd.y);
+                }
+                case ScriptCommandKind::Jump: {
+                    const std::optional<Position> cell = mapper.pixelToCell(cmd.x, cmd.y);
+                    if (cell) {
+                        controller.jump(*cell);
+                    }
                     break;
+                }
                 case ScriptCommandKind::Wait:
                     engine.wait(cmd.ms);
                     break;
