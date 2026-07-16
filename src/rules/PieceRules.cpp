@@ -77,94 +77,23 @@ const AirborneOccupant* airborneAt(const std::vector<AirborneOccupant>& airborne
     return nullptr;
 }
 
-} // namespace piece_rules
-
-bool RookRules::isValidMove(const Position& from, const Position& to, const Board& board,
-                            const std::vector<AirborneOccupant>& /*airborne*/) const {
-    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
-    if (!piece) {
-        return false;
-    }
-    std::set<Position> legal;
-    piece_rules::addSlidingMoves(board, *piece, piece_rules::rookDirs(), legal);
-    return legal.find(to) != legal.end();
-}
-
-bool BishopRules::isValidMove(const Position& from, const Position& to, const Board& board,
-                              const std::vector<AirborneOccupant>& /*airborne*/) const {
-    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
-    if (!piece) {
-        return false;
-    }
-    std::set<Position> legal;
-    piece_rules::addSlidingMoves(board, *piece, piece_rules::bishopDirs(), legal);
-    return legal.find(to) != legal.end();
-}
-
-bool QueenRules::isValidMove(const Position& from, const Position& to, const Board& board,
-                             const std::vector<AirborneOccupant>& /*airborne*/) const {
-    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
-    if (!piece) {
-        return false;
-    }
-    std::set<Position> legal;
-    piece_rules::addSlidingMoves(board, *piece, piece_rules::rookDirs(), legal);
-    piece_rules::addSlidingMoves(board, *piece, piece_rules::bishopDirs(), legal);
-    return legal.find(to) != legal.end();
-}
-
-bool KnightRules::isValidMove(const Position& from, const Position& to, const Board& board,
-                              const std::vector<AirborneOccupant>& /*airborne*/) const {
-    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
-    if (!piece) {
-        return false;
-    }
-    const std::vector<piece_rules::Step> offsets{
-        { -2, -1 }, { -2, 1 }, { -1, -2 }, { -1, 2 },
-        { 1, -2 }, { 1, 2 }, { 2, -1 }, { 2, 1 }
-    };
-    std::set<Position> legal;
-    piece_rules::addStepMoves(board, *piece, offsets, legal);
-    return legal.find(to) != legal.end();
-}
-
-bool KingRules::isValidMove(const Position& from, const Position& to, const Board& board,
-                            const std::vector<AirborneOccupant>& /*airborne*/) const {
-    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
-    if (!piece) {
-        return false;
-    }
-    const std::vector<piece_rules::Step> offsets{
-        { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 },
-        { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 }
-    };
-    std::set<Position> legal;
-    piece_rules::addStepMoves(board, *piece, offsets, legal);
-    return legal.find(to) != legal.end();
-}
-
-bool PawnRules::isValidMove(const Position& from, const Position& to, const Board& board,
-                            const std::vector<AirborneOccupant>& airborne) const {
-    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
-    if (!piece) {
-        return false;
-    }
-
+std::set<Position> collectPawnMoves(const Board& board, const Piece& piece,
+                                    const std::vector<AirborneOccupant>& airborne) {
     std::set<Position> legal;
 
-    const int forward = piece->isWhite() ? -1 : 1;
+    const int forward = piece.isWhite() ? -1 : 1;
     const int rows = board.getRowCount();
-    const int row = piece->position.row;
-    const int col = piece->position.col;
+    const int row = piece.position.row;
+    const int col = piece.position.col;
 
     Position oneForward{ row + forward, col };
-    if (piece_rules::inBounds(board, oneForward.row, oneForward.col)
+    if (inBounds(board, oneForward.row, oneForward.col)
         && board.getCell(oneForward).isEmpty()) {
         legal.insert(oneForward);
 
         Position twoForward{ row + 2 * forward, col };
-        if (piece_rules::isPawnInitialRow(row, piece->color, rows)
-            && piece_rules::inBounds(board, twoForward.row, twoForward.col)
+        if (isPawnInitialRow(row, piece.color, rows)
+            && inBounds(board, twoForward.row, twoForward.col)
             && board.getCell(twoForward).isEmpty()) {
             legal.insert(twoForward);
         }
@@ -172,17 +101,128 @@ bool PawnRules::isValidMove(const Position& from, const Position& to, const Boar
 
     for (int dc : { -1, 1 }) {
         Position capture{ row + forward, col + dc };
-        const Cell& captureCell = board.getCell(capture);
-        const AirborneOccupant* air = piece_rules::airborneAt(airborne, capture);
-        if (!piece_rules::inBounds(board, capture.row, capture.col)) {
+        if (!inBounds(board, capture.row, capture.col)) {
             continue;
         }
-        if (!captureCell.isEmpty() && captureCell.getColor() != piece->color) {
+        const Cell& captureCell = board.getCell(capture);
+        const AirborneOccupant* air = airborneAt(airborne, capture);
+        if (!captureCell.isEmpty() && captureCell.getColor() != piece.color) {
             legal.insert(capture);
-        } else if (air != nullptr && air->piece.size() == 2 && air->piece[0] != piece->color) {
+        } else if (air != nullptr && air->piece.size() == 2 && air->piece[0] != piece.color) {
             legal.insert(capture);
         }
     }
 
+    return legal;
+}
+
+} // namespace piece_rules
+
+bool RookRules::isValidMove(const Position& from, const Position& to, const Board& board,
+                            const std::vector<AirborneOccupant>& airborne) const {
+    const std::set<Position> legal = collectLegalMoves(from, board, airborne);
     return legal.find(to) != legal.end();
+}
+
+std::set<Position> RookRules::collectLegalMoves(const Position& from, const Board& board,
+                                                const std::vector<AirborneOccupant>& /*airborne*/) const {
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return {};
+    }
+    std::set<Position> legal;
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::rookDirs(), legal);
+    return legal;
+}
+
+bool BishopRules::isValidMove(const Position& from, const Position& to, const Board& board,
+                              const std::vector<AirborneOccupant>& airborne) const {
+    const std::set<Position> legal = collectLegalMoves(from, board, airborne);
+    return legal.find(to) != legal.end();
+}
+
+std::set<Position> BishopRules::collectLegalMoves(const Position& from, const Board& board,
+                                                  const std::vector<AirborneOccupant>& /*airborne*/) const {
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return {};
+    }
+    std::set<Position> legal;
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::bishopDirs(), legal);
+    return legal;
+}
+
+bool QueenRules::isValidMove(const Position& from, const Position& to, const Board& board,
+                             const std::vector<AirborneOccupant>& airborne) const {
+    const std::set<Position> legal = collectLegalMoves(from, board, airborne);
+    return legal.find(to) != legal.end();
+}
+
+std::set<Position> QueenRules::collectLegalMoves(const Position& from, const Board& board,
+                                                 const std::vector<AirborneOccupant>& /*airborne*/) const {
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return {};
+    }
+    std::set<Position> legal;
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::rookDirs(), legal);
+    piece_rules::addSlidingMoves(board, *piece, piece_rules::bishopDirs(), legal);
+    return legal;
+}
+
+bool KnightRules::isValidMove(const Position& from, const Position& to, const Board& board,
+                              const std::vector<AirborneOccupant>& airborne) const {
+    const std::set<Position> legal = collectLegalMoves(from, board, airborne);
+    return legal.find(to) != legal.end();
+}
+
+std::set<Position> KnightRules::collectLegalMoves(const Position& from, const Board& board,
+                                                  const std::vector<AirborneOccupant>& /*airborne*/) const {
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return {};
+    }
+    const std::vector<piece_rules::Step> offsets{
+        { -2, -1 }, { -2, 1 }, { -1, -2 }, { -1, 2 },
+        { 1, -2 }, { 1, 2 }, { 2, -1 }, { 2, 1 }
+    };
+    std::set<Position> legal;
+    piece_rules::addStepMoves(board, *piece, offsets, legal);
+    return legal;
+}
+
+bool KingRules::isValidMove(const Position& from, const Position& to, const Board& board,
+                            const std::vector<AirborneOccupant>& airborne) const {
+    const std::set<Position> legal = collectLegalMoves(from, board, airborne);
+    return legal.find(to) != legal.end();
+}
+
+std::set<Position> KingRules::collectLegalMoves(const Position& from, const Board& board,
+                                                const std::vector<AirborneOccupant>& /*airborne*/) const {
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return {};
+    }
+    const std::vector<piece_rules::Step> offsets{
+        { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 },
+        { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 }
+    };
+    std::set<Position> legal;
+    piece_rules::addStepMoves(board, *piece, offsets, legal);
+    return legal;
+}
+
+bool PawnRules::isValidMove(const Position& from, const Position& to, const Board& board,
+                            const std::vector<AirborneOccupant>& airborne) const {
+    const std::set<Position> legal = collectLegalMoves(from, board, airborne);
+    return legal.find(to) != legal.end();
+}
+
+std::set<Position> PawnRules::collectLegalMoves(const Position& from, const Board& board,
+                                                const std::vector<AirborneOccupant>& airborne) const {
+    const std::optional<Piece> piece = piece_rules::pieceAt(board, from);
+    if (!piece) {
+        return {};
+    }
+    return piece_rules::collectPawnMoves(board, *piece, airborne);
 }

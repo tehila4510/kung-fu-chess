@@ -16,10 +16,23 @@ struct PlacedSprite {
     int y = 0;
 };
 
+enum class HighlightKind {
+    Move,
+    Capture
+};
+
+struct CellOverlay {
+    int center_x = 0;
+    int center_y = 0;
+    int radius = 0;
+    HighlightKind kind = HighlightKind::Move;
+};
+
 class Renderer {
 public:
     Renderer(Img background, std::string window_name);
-    int showFrame(const std::vector<PlacedSprite>& sprites, int wait_ms) const;
+    int showFrame(const std::vector<PlacedSprite>& sprites,
+                  const std::vector<CellOverlay>& overlays, int wait_ms) const;
 
     bool isOpen() const;
 

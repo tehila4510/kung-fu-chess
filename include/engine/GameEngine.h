@@ -6,6 +6,7 @@
 #include "rules/RuleEngine.h"
 #include "realtime/RealTimeArbiter.h"
 
+#include <set>
 #include <vector>
 
 struct MoveOutcome { bool is_accepted; std::string reason; };
@@ -21,6 +22,7 @@ public:
     void wait(int ms);
     GameSnapshot snapshot() const;
     std::vector<MotionView> activeMotions() const;
+    std::set<Position> legalMovesFrom(const Position& from) const;
     bool isGameOver() const;
     int rowCount() const;
     int columnCount() const;

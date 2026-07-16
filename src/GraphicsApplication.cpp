@@ -133,7 +133,11 @@ int GraphicsApplication::run() {
         }
 
         const std::vector<view::PlacedSprite> sprites = buildSprites(dt_seconds);
-        const int key = renderer_.showFrame(sprites, kFrameWaitMs);
+        const GameSnapshot snapshot = engine_.snapshot();
+        const std::vector<MotionView> motions = engine_.activeMotions();
+        const std::vector<view::CellOverlay> overlays =
+            buildLegalMoveOverlays(snapshot, motions);
+        const int key = renderer_.showFrame(sprites, overlays, kFrameWaitMs);
         handleMouseClick(view::Img::pollMouseClick(kWindowName));
         if (isExitKey(key) || !renderer_.isOpen()) {
             break;
@@ -297,4 +301,67 @@ std::vector<view::PlacedSprite> GraphicsApplication::buildSprites(
     }
 
     return sprites;
+}
+
+std::vector<view::CellOverlay> GraphicsApplication::buildLegalMoveOverlays(
+    const GameSnapshot& snapshot, const std::vector<MotionView>& motions) const {
+    std::vector<view::CellOverlay> overlays;
+    if (!controller_.hasActiveSelection()) {
+        return overlays;
+    }
+
+    const Position selected = controller_.selectedCell();
+    const std::string selected_token = [&snapshot, &selected]() -> std::string {
+        if (selected.row < 0 || selected.row >= static_cast<int>(snapshot.cells.size())) {
+            return ".";
+        }
+        const std::vector<std::string>& row =
+            snapshot.cells[static_cast<size_t>(selected.row)];
+        if (selected.col < 0 || selected.col >= static_cast<int>(row.size())) {
+            return ".";
+        }
+        return row[static_cast<size_t>(selected.col)];
+    }();
+
+    if (selected_token.empty() || selected_token == ".") {
+        return overlays;
+    }
+
+    const char mover_color = selected_token[0];
+    const std::set<Position> legal_moves = engine_.legalMovesFrom(selected);
+    const int cell_min = std::min(cell_w_, cell_h_);
+    const int move_dot_radius = std::max(3, cell_min * 8 / 100);
+    const int capture_radius = std::max(4, cell_min * 11 / 100);
+
+    for (const Position& dest : legal_moves) {
+        bool is_capture = false;
+        if (dest.row >= 0 && dest.row < static_cast<int>(snapshot.cells.size())) {
+            const std::vector<std::string>& row =
+                snapshot.cells[static_cast<size_t>(dest.row)];
+            if (dest.col >= 0 && dest.col < static_cast<int>(row.size())) {
+                const std::string& token = row[static_cast<size_t>(dest.col)];
+                is_capture = !token.empty() && token != "." && token[0] != mover_color;
+            }
+        }
+
+        if (!is_capture) {
+            for (const MotionView& motion : motions) {
+                if (motion.from == motion.to && motion.from == dest
+                    && motion.piece.size() == 2 && motion.piece[0] != mover_color) {
+                    is_capture = true;
+                    break;
+                }
+            }
+        }
+
+        const std::pair<int, int> center = mapper_.cellCenterPixel(dest);
+        overlays.push_back(view::CellOverlay{
+            center.first,
+            center.second,
+            is_capture ? capture_radius : move_dot_radius,
+            is_capture ? view::HighlightKind::Capture : view::HighlightKind::Move
+        });
+    }
+
+    return overlays;
 }

@@ -38,6 +38,12 @@ std::optional<Position> BoardMapper::pixelToCell(int x, int y) const {
     return Position{row, col};
 }
 
+std::pair<int, int> BoardMapper::cellCenterPixel(const Position& cell) const {
+    const int center_x = cell.col * cellWidth + cellWidth / 2;
+    const int center_y = cell.row * cellHeight + cellHeight / 2;
+    return { center_x, center_y };
+}
+
 int BoardMapper::getCellSize() const {
     return cellWidth;
 }

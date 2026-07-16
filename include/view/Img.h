@@ -28,6 +28,11 @@ public:
                   const cv::Scalar& color = cv::Scalar(255, 255, 255, 255),
                   int thickness = 1);
 
+    void draw_solid_disc(int center_x, int center_y, int radius, const cv::Scalar& bgr);
+
+    void draw_ring(int center_x, int center_y, int radius, const cv::Scalar& bgr,
+                   int thickness);
+
     void show() const;
 
     Img clone() const;

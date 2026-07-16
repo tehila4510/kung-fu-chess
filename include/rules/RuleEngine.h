@@ -4,6 +4,7 @@
 #include "model/Piece.h"
 #include "rules/PieceRules.h"
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 
@@ -30,6 +31,9 @@ public:
     MoveValidation validateMove(const Board& board, const Position& from, const Position& to) const;
     MoveValidation validateMove(const Board& board, const Position& from, const Position& to,
                                 const std::vector<AirborneOccupant>& airborne) const;
+    std::set<Position> legalMoves(const Board& board, const Position& from) const;
+    std::set<Position> legalMoves(const Board& board, const Position& from,
+                                  const std::vector<AirborneOccupant>& airborne) const;
 
 private:
     std::unordered_map<char, std::unique_ptr<IPieceRules>> rules;

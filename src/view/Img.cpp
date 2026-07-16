@@ -1,5 +1,6 @@
 #include "view/Img.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -140,6 +141,27 @@ void Img::put_text(const std::string& txt, int x, int y, double font_size,
     }
     cv::putText(img, txt, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, font_size,
                 color, thickness, cv::LINE_AA);
+}
+
+void Img::draw_solid_disc(int center_x, int center_y, int radius, const cv::Scalar& bgr) {
+    if (img.empty()) {
+        throw std::runtime_error("Image not loaded.");
+    }
+    if (radius <= 0) {
+        throw std::invalid_argument("Highlight radius must be positive.");
+    }
+    cv::circle(img, cv::Point(center_x, center_y), radius, bgr, -1, cv::LINE_AA);
+}
+
+void Img::draw_ring(int center_x, int center_y, int radius, const cv::Scalar& bgr,
+                    int thickness) {
+    if (img.empty()) {
+        throw std::runtime_error("Image not loaded.");
+    }
+    if (radius <= 0 || thickness <= 0) {
+        throw std::invalid_argument("Highlight radius and thickness must be positive.");
+    }
+    cv::circle(img, cv::Point(center_x, center_y), radius, bgr, thickness, cv::LINE_AA);
 }
 
 void Img::show() const {

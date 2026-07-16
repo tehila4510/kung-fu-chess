@@ -63,3 +63,31 @@ MoveValidation RuleEngine::validateMove(const Board& board, const Position& from
 
     return { true, MoveResult::Ok };
 }
+
+std::set<Position> RuleEngine::legalMoves(const Board& board, const Position& from) const {
+    return legalMoves(board, from, {});
+}
+
+std::set<Position> RuleEngine::legalMoves(const Board& board, const Position& from,
+                                          const std::vector<AirborneOccupant>& airborne) const {
+    if (!board.isWithinBounds(from)) {
+        return {};
+    }
+
+    const Cell& fromCell = board.getCell(from);
+    if (fromCell.isEmpty()) {
+        return {};
+    }
+
+    const std::optional<Piece> piece = Piece::tryFromToken(fromCell.getContent(), from);
+    if (!piece) {
+        return {};
+    }
+
+    const auto it = rules.find(piece->kind);
+    if (it == rules.end()) {
+        return {};
+    }
+
+    return it->second->collectLegalMoves(from, board, airborne);
+}

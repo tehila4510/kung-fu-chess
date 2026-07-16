@@ -111,3 +111,12 @@ GameSnapshot GameEngine::snapshot() const {
 std::vector<MotionView> GameEngine::activeMotions() const {
     return arbiter.activeMotions();
 }
+
+std::set<Position> GameEngine::legalMovesFrom(const Position& from) const {
+    try {
+        const Board& board = gameState.getBoard();
+        return ruleEngine.legalMoves(board, from, airborneForValidation(arbiter));
+    } catch (const std::exception&) {
+        return {};
+    }
+}
