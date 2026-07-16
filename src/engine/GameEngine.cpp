@@ -30,10 +30,6 @@ MoveOutcome GameEngine::requestMove(const Position& from, const Position& to) {
             if (arbiter.hasActiveMotion(color)) {
                 return { false, "move_in_flight" };
             }
-            const char opponent = color == 'w' ? 'b' : 'w';
-            if (arbiter.hasActiveTravel(opponent)) {
-                return { false, "common_route" };
-            }
         }
 
         arbiter.startMotion(moverCell.getContent(), from, to);
@@ -97,4 +93,8 @@ int GameEngine::columnCount() const {
 
 GameSnapshot GameEngine::snapshot() const {
     return gameState.createSnapshot();
+}
+
+std::vector<MotionView> GameEngine::activeMotions() const {
+    return arbiter.activeMotions();
 }

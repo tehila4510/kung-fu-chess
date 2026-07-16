@@ -61,7 +61,8 @@ if /i "%~1"=="graphics" (
     )
 
     call "!VCVARS!"
-    set GRAPHICS_SOURCES=src\graphics_main.cpp src\view\Img.cpp src\view\Renderer.cpp src\graphics\Animation.cpp src\graphics\AnimationLoader.cpp src\graphics\AnimationCache.cpp src\graphics\GraphicsConfigLoader.cpp src\graphics\AssetPaths.cpp src\graphics\BoardLayout.cpp src\graphics\FileFrameSource.cpp src\graphics\FileBoardSource.cpp src\graphics\FileConfigSource.cpp src\graphics\BoardLayoutLoader.cpp
+    set GRAPHICS_ENGINE_SOURCES=src\model\Cell.cpp src\model\Board.cpp src\model\GameState.cpp src\model\Piece.cpp src\model\Position.cpp src\rules\PieceRules.cpp src\rules\RuleEngine.cpp src\realtime\RealTimeArbiter.cpp src\engine\GameEngine.cpp src\input\BoardMapper.cpp src\input\Controller.cpp
+    set GRAPHICS_SOURCES=src\graphics_main.cpp src\GraphicsApplication.cpp src\view\Img.cpp src\view\Renderer.cpp src\graphics\Animation.cpp src\graphics\AnimationLoader.cpp src\graphics\AnimationCache.cpp src\graphics\PieceVisual.cpp src\graphics\GraphicsConfigLoader.cpp src\graphics\AssetPaths.cpp src\graphics\BoardLayout.cpp src\graphics\FileFrameSource.cpp src\graphics\FileBoardSource.cpp src\graphics\FileConfigSource.cpp src\graphics\BoardLayoutLoader.cpp !GRAPHICS_ENGINE_SOURCES!
     cl /nologo /EHsc /std:c++17 /Iinclude /I!OPENCV_INC! !GRAPHICS_SOURCES! /Fe:build\KungFuChessGraphics.exe /link /LIBPATH:!OPENCV_BIN! opencv_world451.lib user32.lib gdi32.lib
     if errorlevel 1 exit /b 1
     copy /Y "!OPENCV_BIN!\opencv_world451.dll" build\ >nul

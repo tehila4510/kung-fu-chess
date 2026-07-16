@@ -2,10 +2,17 @@
 #define VIEW_IMG_H
 
 #include <opencv2/opencv.hpp>
+#include <optional>
 #include <string>
 #include <utility>
 
 namespace view {
+
+struct MouseClick {
+    int x = 0;
+    int y = 0;
+    bool is_double = false;
+};
 
 class Img {
 public:
@@ -30,6 +37,7 @@ public:
 
     static void destroyWindows();
     static bool isWindowOpen(const std::string& window_name);
+    static std::optional<MouseClick> pollMouseClick(const std::string& window_name);
 
     const cv::Mat& get_mat() const;
     bool is_loaded() const;

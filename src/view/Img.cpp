@@ -1,9 +1,54 @@
 #include "view/Img.h"
 
 #include <stdexcept>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace view {
+namespace {
+
+struct WindowInput {
+    std::string window_name;
+    std::optional<MouseClick> pending_click;
+};
+
+std::unordered_map<std::string, WindowInput> g_window_inputs;
+std::unordered_set<std::string> g_windows_created;
+
+void onMouse(int event, int x, int y, int /*flags*/, void* userdata) {
+    auto* input = static_cast<WindowInput*>(userdata);
+    if (input == nullptr) {
+        return;
+    }
+
+    if (event == cv::EVENT_LBUTTONDBLCLK) {
+        input->pending_click = MouseClick{x, y, true};
+        return;
+    }
+    if (event == cv::EVENT_LBUTTONDOWN) {
+        input->pending_click = MouseClick{x, y, false};
+    }
+}
+
+WindowInput& ensureWindowInput(const std::string& window_name) {
+    return g_window_inputs.emplace(window_name, WindowInput{window_name, std::nullopt})
+        .first->second;
+}
+
+void ensureWindowReady(const std::string& window_name) {
+    if (g_windows_created.count(window_name) == 0) {
+        cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+        g_windows_created.insert(window_name);
+    }
+}
+
+void registerMouseCallback(const std::string& window_name) {
+    WindowInput& input = ensureWindowInput(window_name);
+    cv::setMouseCallback(window_name, onMouse, &input);
+}
+
+}  // namespace
 
 Img::Img() = default;
 
@@ -118,16 +163,31 @@ int Img::display(const std::string& window_name, int wait_ms) const {
     if (img.empty()) {
         throw std::runtime_error("Image not loaded.");
     }
+    ensureWindowReady(window_name);
     cv::imshow(window_name, img);
+    registerMouseCallback(window_name);
     return cv::waitKey(wait_ms);
 }
 
 void Img::destroyWindows() {
+    g_window_inputs.clear();
+    g_windows_created.clear();
     cv::destroyAllWindows();
 }
 
 bool Img::isWindowOpen(const std::string& window_name) {
     return cv::getWindowProperty(window_name, cv::WND_PROP_VISIBLE) >= 1.0;
+}
+
+std::optional<MouseClick> Img::pollMouseClick(const std::string& window_name) {
+    const auto it = g_window_inputs.find(window_name);
+    if (it == g_window_inputs.end() || !it->second.pending_click.has_value()) {
+        return std::nullopt;
+    }
+
+    const MouseClick click = *it->second.pending_click;
+    it->second.pending_click.reset();
+    return click;
 }
 
 const cv::Mat& Img::get_mat() const {

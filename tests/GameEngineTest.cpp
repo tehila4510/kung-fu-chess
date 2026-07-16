@@ -51,7 +51,7 @@ TEST_CASE("GameEngine orchestrates moves, timing and game over") {
         CHECK(second.reason == "move_in_flight");
     }
 
-    SUBCASE("the opponent may not travel while the other player is in flight") {
+    SUBCASE("opposite colors may travel while the other player is in flight") {
         GameEngine engine = loadEngine({
             "wR . . .",
             ". . . .",
@@ -59,8 +59,7 @@ TEST_CASE("GameEngine orchestrates moves, timing and game over") {
 
         CHECK(engine.requestMove({ 0, 0 }, { 0, 3 }).is_accepted);
         const MoveOutcome second = engine.requestMove({ 2, 0 }, { 2, 3 });
-        CHECK_FALSE(second.is_accepted);
-        CHECK(second.reason == "common_route");
+        CHECK(second.is_accepted);
     }
 
     SUBCASE("capturing the king ends the game") {

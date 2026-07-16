@@ -2,6 +2,7 @@
 #define REAL_TIME_ARBITER_H
 #include "model/Board.h"
 #include "realtime/Motion.h"
+#include "realtime/MotionView.h"
 #include <optional>
 #include <string>
 #include <vector>
@@ -24,5 +25,6 @@ public:
     void startMotion(const std::string& piece, const Position& from, const Position& to);
     void startJump(const std::string& piece, const Position& at);
     std::vector<ArrivalEvent> advanceTime(int ms, Board& board);
+    std::vector<MotionView> activeMotions() const;
 };
 #endif

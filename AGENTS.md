@@ -15,12 +15,13 @@ include/
 ├── engine/      GameEngine
 ├── io/          BoardParser, BoardPrinter (IBoardPrinter)
 ├── input/       Controller, BoardMapper
-├── graphics/    Animation, AnimationLoader, AnimationCache (AnimationSpec), BoardLayout
+├── graphics/    Animation, AnimationLoader, AnimationCache (AnimationSpec), BoardLayout, PieceVisual
 ├── view/        Img (OpenCV wrapper), Renderer
 ├── texttests/   ScriptParser (IScriptSource), ScriptRunner, ScriptCommand
-└── App.h        Composition root
+├── App.h        Composition root (console)
+└── GraphicsApplication.h  Interactive graphics composition root (frame loop)
 
-src/             mirrors include/ paths + main.cpp + graphics_main.cpp
+src/             mirrors include/ paths + main.cpp + graphics_main.cpp + GraphicsApplication.cpp
 build.bat        primary Windows build script
 CMakeLists.txt   optional CMake build
 .cursor/rules/   Cursor MDC rules (agents.mdc = entry point)
@@ -40,9 +41,10 @@ CMakeLists.txt   optional CMake build
 .\build.bat graphics  # animated board window (OpenCV via Img only; requires MSVC + OpenCV_451)
 ```
 
-`build.bat graphics` builds `src/graphics_main.cpp` — the single graphics entry point. It reads the
-initial layout from `assets/pieces/board.csv`, draws `assets/board.png`, and plays each piece's looping
-`idle` animation. No game logic yet; the window closes on ESC/Q or when the user closes it.
+`build.bat graphics` builds `src/graphics_main.cpp` — a thin entry point that loads
+`assets/pieces/board.csv` + `assets/board.png`, constructs `GraphicsApplication`, and calls `run()`.
+`GraphicsApplication` owns the engine/input wiring, `PieceVisual` state animations, delta-time loop,
+and rendering. The window closes on ESC/Q or when the user closes it.
 
 Compiler flags: `-std=c++17 -Iinclude -Wall -Wextra -Wpedantic`
 
@@ -70,10 +72,10 @@ main/App → input/view/io → engine → rules/realtime → model
 | Engine | `GameEngine` | Orchestrates model + rules + realtime; exposes `MoveResult`, `GameSnapshot` |
 | I/O | `BoardParser`, `BoardPrinter` | Parse and serialize board text |
 | Input | `Controller`, `BoardMapper` | Map clicks/pixels to engine calls |
-| Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout` | Load/scale sprite frames, play animations, read asset board layout — depends on `Img` only |
+| Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout`, `PieceVisual` | Load/scale sprites, play named state animations, read asset layout — depends on `Img` only |
 | View | `Img`, `Renderer` | `Img` wraps OpenCV; `Renderer` composites sprites over the board and drives the window — never mutate `Board` |
 | Text tests | `ScriptParser`, `ScriptRunner` | Scripted stdin integration |
-| App | `App` | Wire layers; `main` dispatches commands |
+| App | `App`, `GraphicsApplication`, `main`, `graphics_main` | Wire layers; console and graphics entry points |
 
 ### Cross-boundary DTOs
 

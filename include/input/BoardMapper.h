@@ -4,13 +4,17 @@
 #include <optional>
 
 class BoardMapper {
-    int cellSize = 100;
+    int cellWidth = 100;
+    int cellHeight = 100;
     int widthCells = 8;
     int heightCells = 8;
 public:
-    BoardMapper(int cellSize = 100, int widthCells = 8, int heightCells = 8);
+    BoardMapper(int cellSize, int widthCells, int heightCells);
+    BoardMapper(int cellWidth, int cellHeight, int widthCells, int heightCells);
     std::optional<Position> pixelToCell(int x, int y) const;
     int getCellSize() const;
+    int getCellWidth() const;
+    int getCellHeight() const;
     int getWidthCells() const;
     int getHeightCells() const;
 };

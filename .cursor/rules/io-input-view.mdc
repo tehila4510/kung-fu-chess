@@ -1,6 +1,6 @@
 ---
 description: I/O, input, view, and app boundary conventions
-globs: "{include/io/**,src/io/**,include/input/**,src/input/**,include/view/**,src/view/**,include/graphics/**,src/graphics/**,include/texttests/**,src/texttests/**,src/main.cpp,src/graphics_main.cpp,include/App.h,src/App.cpp}"
+globs: "{include/io/**,src/io/**,include/input/**,src/input/**,include/view/**,src/view/**,include/graphics/**,src/graphics/**,include/texttests/**,src/texttests/**,src/main.cpp,src/graphics_main.cpp,include/App.h,src/App.cpp,include/GraphicsApplication.h,src/GraphicsApplication.cpp}"
 alwaysApply: false
 ---
 
@@ -50,21 +50,23 @@ stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapsh
 - No direct `Board` access; all display data comes from the snapshot DTO
 - Keep rendering logic free of rule checks
 
-## Graphics flow (animated board — no game logic yet)
+## Graphics flow (interactive animated board)
 
 ```
-board.csv → graphics::BoardLayout → AnimationCache (AnimationSpec: frames+fps+loop)
-          → graphics::Animation per piece → Renderer.showFrame(PlacedSprite[]) → window
+board.csv → graphics::BoardLayout → GraphicsApplication
+          → AnimationCache → PieceVisual (map of state → Animation)
+          → Renderer.showFrame(PlacedSprite[]) → window
 ```
 
-- `BoardLayout::loadFromCsv` reads the asset layout once (the only CSV reader)
-- `AnimationCache::get` reads `config.json` once per (piece, state, size) and caches an `AnimationSpec`;
-  `Animation`s are built from a spec in `graphics_main` (frames share reference-counted image data)
-- `Renderer` depends on `Img` only: it clones the board background, draws each `PlacedSprite`, and
-  displays one window. The render loop exits on ESC/Q **or** `Renderer::isOpen()` == false (window
-  closed) — never spin forever
-- `graphics_main.cpp` is the single graphics entry point (`build.bat graphics`); the previous
-  `main_animated_board` / `main_step1_test` demos and the empty `ImageView` were removed
+- `BoardLayoutLoader` reads the asset layout once
+- `AnimationCache::get` reads `config.json` once per (piece, state, size) and caches an `AnimationSpec`
+- `PieceVisual` holds `map<string, Animation>` for states (`idle`, `move`, `jump`, `short_rest`,
+  `long_rest`); missing states fall back to `idle` via `animationFor`
+- `GraphicsApplication` owns the frame loop (delta time, `engine.wait`, click handling, sprite build)
+- `Renderer` depends on `Img` only: clones the board background, draws each `PlacedSprite`, displays
+  one window. The loop exits on ESC/Q **or** `Renderer::isOpen()` == false — never spin forever
+- `graphics_main.cpp` is a thin entry point (`build.bat graphics`) that loads assets and calls
+  `GraphicsApplication::run()`
 
 ## Exception handling
 
@@ -82,7 +84,7 @@ board.csv → graphics::BoardLayout → AnimationCache (AnimationSpec: frames+fp
 
 ### View (`view/`)
 
-- `Img`: Qama Tech course wrapper — the **only** place OpenCV is allowed (`Img.h` / `Img.cpp`); validate and throw (missing file, bad draw rect) — no try-catch; `graphics_main` is the top catcher
+- `Img`: Qama Tech course wrapper — the **only** place OpenCV is allowed (`Img.h` / `Img.cpp`); validate and throw (missing file, bad draw rect) — no try-catch; `graphics_main` is the top catcher for the graphics app
 - All other view/graphics code uses the `Img` API only — no direct OpenCV includes
 
 ### Text tests & app

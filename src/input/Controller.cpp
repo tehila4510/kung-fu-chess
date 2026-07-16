@@ -28,7 +28,8 @@ static std::string cellToken(const GameSnapshot& snap, const Position& cell) {
 }
 
 static bool cellHasPiece(const GameSnapshot& snap, const Position& cell) {
-    return cellToken(snap, cell) != ".";
+    const std::string token = cellToken(snap, cell);
+    return !token.empty() && token != ".";
 }
 
 static bool sameColor(const GameSnapshot& snap, const Position& a, const Position& b) {

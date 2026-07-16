@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <stdexcept>
 
 namespace {
@@ -133,4 +134,33 @@ std::vector<ArrivalEvent> RealTimeArbiter::advanceTime(int ms, Board& board) {
     }
 
     return arrivals;
+}
+
+std::vector<MotionView> RealTimeArbiter::activeMotions() const {
+    std::vector<MotionView> views;
+    views.reserve(kColorCount);
+
+    for (const auto& slot : active) {
+        if (!slot) {
+            continue;
+        }
+
+        const Motion& motion = *slot;
+        const long long duration_ms =
+            motion.from == motion.to
+                ? static_cast<long long>(kJumpDurationMs)
+                : static_cast<long long>(motion.from.chebyshevDistanceTo(motion.to)) * 1000;
+        const long long start_ms = motion.arrivalTime - duration_ms;
+
+        double progress = 0.0;
+        if (duration_ms > 0) {
+            progress = static_cast<double>(clockMs - start_ms) /
+                       static_cast<double>(duration_ms);
+            progress = std::clamp(progress, 0.0, 1.0);
+        }
+
+        views.push_back(MotionView{motion.piece, motion.from, motion.to, progress});
+    }
+
+    return views;
 }

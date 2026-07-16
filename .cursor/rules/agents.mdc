@@ -35,7 +35,7 @@ alwaysApply: true
 - C++17, STL only for the engine, console app, and tests — no third-party deps there
 - Headers in `include/`, sources in `src/`
 - Build: `.\build.bat` builds and runs the app (`src\main.cpp` composition root); `.\build.bat test` builds and runs the engine test suite
-- **Graphics only:** use the Qama Tech `Img` wrapper (`include/view/Img.h`, `src/view/Img.cpp`) from the course repo; OpenCV is allowed **only** inside that `Img` class (bundled `OpenCV_451` for `build.bat graphics`). No other graphics or rendering libraries (SDL, SFML, GLFW, etc.). Never `#include <opencv2/...>` outside `Img.h` / `Img.cpp` — all other graphics code (`graphics/`, `Renderer`, `graphics_main`) goes through the `Img` API. `build.bat graphics` builds the single graphics entry point `src/graphics_main.cpp`, which shows the initial board (`assets/pieces/board.csv` + `assets/board.png`) with each piece playing its looping `idle` animation — no game logic yet.
+- **Graphics only:** use the Qama Tech `Img` wrapper (`include/view/Img.h`, `src/view/Img.cpp`) from the course repo; OpenCV is allowed **only** inside that `Img` class (bundled `OpenCV_451` for `build.bat graphics`). No other graphics or rendering libraries (SDL, SFML, GLFW, etc.). Never `#include <opencv2/...>` outside `Img.h` / `Img.cpp` — all other graphics code (`graphics/`, `Renderer`, `GraphicsApplication`, `graphics_main`) goes through the `Img` API. `build.bat graphics` builds `src/graphics_main.cpp` (thin entry) + `GraphicsApplication` (frame loop, click-to-move, `PieceVisual` state animations for idle/move/jump/rest).
 
 ## Language
 
@@ -52,10 +52,11 @@ include/
 ├── engine/      GameEngine
 ├── io/          BoardParser, BoardPrinter (IBoardPrinter)
 ├── input/       Controller, BoardMapper
-├── graphics/    Animation, AnimationLoader, AnimationCache (AnimationSpec), BoardLayout
+├── graphics/    Animation, AnimationLoader, AnimationCache (AnimationSpec), BoardLayout, PieceVisual
 ├── view/        Img (OpenCV wrapper), Renderer
 ├── texttests/   ScriptParser (IScriptSource), ScriptRunner, ScriptCommand
-└── App.h        Composition root
+├── App.h        Composition root (console)
+└── GraphicsApplication.h  Interactive graphics composition root (frame loop)
 ```
 
 > Legacy `Board.h`/`Board.cpp`, `Game.h`/`Game.cpp`, `MoveRules.h`/`MoveRules.cpp` are removed.
@@ -80,9 +81,9 @@ main/App → input/view/io → engine → rules/realtime → model
 | Engine | `GameEngine` | Orchestrates model + rules + realtime |
 | I/O | `BoardParser`, `BoardPrinter` | Parse/serialize board text |
 | Input | `Controller`, `BoardMapper` | Map clicks/pixels to engine calls |
-| Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout` | Load/scale sprites, play animations, read asset layout — via `Img` only |
+| Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout`, `PieceVisual` | Load/scale sprites, play named state animations, read asset layout — via `Img` only |
 | View | `Img`, `Renderer` | `Img` wraps OpenCV; `Renderer` composites sprites over the board + drives the window |
-| App | `App`, `main` | Wire layers; dispatch commands |
+| App | `App`, `GraphicsApplication`, `main`, `graphics_main` | Wire layers; console and graphics entry points |
 
 ### Patterns
 
