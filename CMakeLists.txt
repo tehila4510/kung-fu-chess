@@ -38,6 +38,15 @@ add_executable(KungFuChess
     ${ENGINE_SOURCES}
 )
 
+set(GRAPHICS_STL_SOURCES
+    src/graphics/AssetPaths.cpp
+    src/graphics/BoardLayout.cpp
+    src/graphics/FileBoardSource.cpp
+    src/graphics/BoardLayoutLoader.cpp
+    src/graphics/FileConfigSource.cpp
+    src/graphics/GraphicsConfigLoader.cpp
+)
+
 add_executable(KungFuChessEngineTests
     tests/test_main.cpp
     tests/RuleEngineTest.cpp
@@ -46,7 +55,11 @@ add_executable(KungFuChessEngineTests
     tests/BoardMapperTest.cpp
     tests/ControllerTest.cpp
     tests/BoardIOTest.cpp
+    tests/GraphicsBoardLayoutTest.cpp
+    tests/GraphicsConfigTest.cpp
+    tests/GraphicsAssetPathsTest.cpp
     ${ENGINE_SOURCES}
+    ${GRAPHICS_STL_SOURCES}
 )
 
 enable_testing()
@@ -109,6 +122,44 @@ if(EXISTS "${OPENCV_DIR}/include")
                 "$<$<NOT:$<CONFIG:Debug>>:${OPENCV_DIR}/bin/opencv_world451.dll>"
                 "$<TARGET_FILE_DIR:KungFuChessGraphics>")
     endif()
+
+    add_executable(KungFuChessGraphicsTests
+        tests/test_main.cpp
+        tests/GraphicsAnimationTest.cpp
+        tests/GraphicsAnimationCacheTest.cpp
+        tests/GraphicsPieceVisualTest.cpp
+        tests/GraphicsImgTest.cpp
+        tests/GraphicsRendererTest.cpp
+        tests/GraphicsFileFrameSourceTest.cpp
+        src/view/Img.cpp
+        src/view/Renderer.cpp
+        src/graphics/Animation.cpp
+        src/graphics/AnimationLoader.cpp
+        src/graphics/AnimationCache.cpp
+        src/graphics/PieceVisual.cpp
+        src/graphics/GraphicsConfigLoader.cpp
+        src/graphics/AssetPaths.cpp
+        src/graphics/BoardLayout.cpp
+        src/graphics/FileFrameSource.cpp
+        src/graphics/FileBoardSource.cpp
+        src/graphics/FileConfigSource.cpp
+        src/graphics/BoardLayoutLoader.cpp
+        ${GRAPHICS_ENGINE_SOURCES}
+    )
+    target_include_directories(KungFuChessGraphicsTests PRIVATE "${OPENCV_DIR}/include")
+    target_link_directories(KungFuChessGraphicsTests PRIVATE "${OPENCV_DIR}/bin")
+    target_link_libraries(KungFuChessGraphicsTests
+        $<$<CONFIG:Debug>:${OPENCV_DIR}/bin/opencv_world451d.lib>
+        $<$<NOT:$<CONFIG:Debug>>:${OPENCV_DIR}/bin/opencv_world451.lib>
+    )
+    if(WIN32)
+        add_custom_command(TARGET KungFuChessGraphicsTests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<$<CONFIG:Debug>:${OPENCV_DIR}/bin/opencv_world451d.dll>"
+                "$<$<NOT:$<CONFIG:Debug>>:${OPENCV_DIR}/bin/opencv_world451.dll>"
+                "$<TARGET_FILE_DIR:KungFuChessGraphicsTests>")
+    endif()
+    add_test(NAME KungFuChessGraphicsTests COMMAND KungFuChessGraphicsTests)
 else()
     message(STATUS "OpenCV_451 not found at ${OPENCV_DIR} - skipping KungFuChessGraphics target")
 endif()

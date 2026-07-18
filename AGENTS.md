@@ -37,14 +37,20 @@ CMakeLists.txt   optional CMake build
 
 ```powershell
 .\build.bat        # build and run the app (src/main.cpp composition root)
-.\build.bat test   # build and run the engine test suite
+.\build.bat test   # build and run the engine test suite (includes STL graphics tests)
 .\build.bat graphics  # animated board window (OpenCV via Img only; requires MSVC + OpenCV_451)
+.\build.bat graphics-test  # OpenCV graphics unit tests (Animation/Cache/PieceVisual/Img/Renderer)
 ```
 
 `build.bat graphics` builds `src/graphics_main.cpp` — a thin entry point that loads
 `assets/pieces/board.csv` + `assets/board.png`, constructs `GraphicsApplication`, and calls `run()`.
 `GraphicsApplication` owns the engine/input wiring, `PieceVisual` state animations, delta-time loop,
 and rendering. The window closes on ESC/Q or when the user closes it.
+
+`build.bat test` also covers OpenCV-free graphics helpers (`BoardLayout`, `FileConfigSource`,
+`AssetPaths`). `build.bat graphics-test` builds `KungFuChessGraphicsTests.exe` with MSVC + OpenCV
+and exercises animation playback, cache DI, `PieceVisual` fallbacks, `Img`, `Renderer`, and
+`FileFrameSource` against real assets under `assets/`.
 
 Compiler flags: `-std=c++17 -Iinclude -Wall -Wextra -Wpedantic`
 

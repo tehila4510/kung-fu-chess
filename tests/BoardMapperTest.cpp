@@ -2,6 +2,7 @@
 #include "input/BoardMapper.h"
 
 #include <optional>
+#include <stdexcept>
 
 TEST_CASE("BoardMapper maps pixels to cells and rejects off-board clicks") {
     BoardMapper mapper(100, 8, 8);
@@ -94,4 +95,43 @@ TEST_CASE("BoardMapper honours a non-default cell size") {
         CHECK(cell->row == 4);
         CHECK(cell->col == 5);
     }
+}
+
+TEST_CASE("BoardMapper supports rectangular cells used by the graphics board") {
+    BoardMapper mapper(100, 50, 8, 8);
+
+    SUBCASE("cell width and height are independent") {
+        CHECK(mapper.getCellWidth() == 100);
+        CHECK(mapper.getCellHeight() == 50);
+        CHECK(mapper.getCellSize() == 100);
+    }
+
+    SUBCASE("pixel mapping uses each axis cell size") {
+        const std::optional<Position> cell = mapper.pixelToCell(250, 75);
+        REQUIRE(cell.has_value());
+        CHECK(cell->row == 1);
+        CHECK(cell->col == 2);
+    }
+
+    SUBCASE("cellCenterPixel returns the geometric center") {
+        const auto center = mapper.cellCenterPixel(Position{1, 2});
+        CHECK(center.first == 250);
+        CHECK(center.second == 75);
+    }
+
+    SUBCASE("boundary pixels still map into the last cell") {
+        const std::optional<Position> cell = mapper.pixelToCell(799, 399);
+        REQUIRE(cell.has_value());
+        CHECK(cell->row == 7);
+        CHECK(cell->col == 7);
+    }
+}
+
+TEST_CASE("BoardMapper rejects non-positive construction dimensions") {
+    CHECK_THROWS_AS(BoardMapper(0, 8, 8), std::invalid_argument);
+    CHECK_THROWS_AS(BoardMapper(-1, 8, 8), std::invalid_argument);
+    CHECK_THROWS_AS(BoardMapper(10, 0, 8), std::invalid_argument);
+    CHECK_THROWS_AS(BoardMapper(10, 8, 0), std::invalid_argument);
+    CHECK_THROWS_AS(BoardMapper(10, 0, 8, 8), std::invalid_argument);
+    CHECK_THROWS_AS(BoardMapper(10, 10, 0, 8), std::invalid_argument);
 }

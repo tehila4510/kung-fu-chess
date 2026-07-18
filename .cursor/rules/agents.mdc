@@ -13,7 +13,7 @@ alwaysApply: true
 2. Apply layer-specific rules from `.cursor/rules/` when editing matching paths
 3. Keep diffs minimal — change only what the task requires
 4. After adding `.cpp` files, update `build.bat` and `CMakeLists.txt`
-5. Verify with `.\build.bat` or `.\build.bat test` when logic changes
+5. Verify with `.\build.bat` or `.\build.bat test` when logic changes; use `.\build.bat graphics-test` for OpenCV graphics unit tests
 6. If the change affects layout, architecture, layers, build, input protocol, or conventions — update the instruction files to match:
    - `.cursor/rules/agents.mdc` (primary)
    - `AGENTS.md` (keep in sync with agents.mdc)
@@ -34,8 +34,8 @@ alwaysApply: true
 
 - C++17, STL only for the engine, console app, and tests — no third-party deps there
 - Headers in `include/`, sources in `src/`
-- Build: `.\build.bat` builds and runs the app (`src\main.cpp` composition root); `.\build.bat test` builds and runs the engine test suite
-- **Graphics only:** use the Qama Tech `Img` wrapper (`include/view/Img.h`, `src/view/Img.cpp`) from the course repo; OpenCV is allowed **only** inside that `Img` class (bundled `OpenCV_451` for `build.bat graphics`). No other graphics or rendering libraries (SDL, SFML, GLFW, etc.). Never `#include <opencv2/...>` outside `Img.h` / `Img.cpp` — all other graphics code (`graphics/`, `Renderer`, `GraphicsApplication`, `graphics_main`) goes through the `Img` API. `build.bat graphics` builds `src/graphics_main.cpp` (thin entry) + `GraphicsApplication` (frame loop, click-to-move, `PieceVisual` state animations for idle/move/jump/rest).
+- Build: `.\build.bat` builds and runs the app (`src\main.cpp` composition root); `.\build.bat test` builds and runs the engine test suite (includes STL graphics tests for board CSV / config / asset paths); `.\build.bat graphics-test` builds and runs OpenCV graphics unit tests
+- **Graphics only:** use the Qama Tech `Img` wrapper (`include/view/Img.h`, `src/view/Img.cpp`) from the course repo; OpenCV is allowed **only** inside that `Img` class (bundled `OpenCV_451` for `build.bat graphics` / `graphics-test`). No other graphics or rendering libraries (SDL, SFML, GLFW, etc.). Never `#include <opencv2/...>` outside `Img.h` / `Img.cpp` — all other graphics code (`graphics/`, `Renderer`, `GraphicsApplication`, `graphics_main`) goes through the `Img` API. `build.bat graphics` builds `src/graphics_main.cpp` (thin entry) + `GraphicsApplication` (frame loop, click-to-move, `PieceVisual` state animations for idle/move/jump/rest).
 
 ## Language
 
