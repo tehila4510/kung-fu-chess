@@ -30,8 +30,9 @@ alwaysApply: false
 stdin → ScriptParser → ScriptRunner → Controller → GameEngine → snapshot → BoardPrinter
 ```
 
-- `BoardMapper`: pixel `(x, y)` → grid `Position` using cell size constant; owned by the caller layer
-  (e.g. `ScriptRunner`, UI loop), not by `Controller`
+- `BoardMapper`: pixel `(x, y)` → grid `Position` using cell size and optional board origin
+  (`originX`/`originY`); owned by the caller layer (e.g. `ScriptRunner`, UI loop), not by
+  `Controller`. Graphics offsets origin so side-panel clicks are off-board.
 - `Controller`: operates strictly on `Position` (`click(const Position&)`, `jump(const Position&)`) and
   depends only on `GameEngine&`; the caller translates pixels via `BoardMapper::pixelToCell` first (an
   off-board result clears the selection for clicks and is ignored for jumps). Translate `click` into
@@ -65,8 +66,11 @@ board.csv → graphics::BoardLayout → GraphicsApplication
 - `GraphicsApplication` owns the frame loop (delta time, `engine.wait`, click handling, sprite build)
 - Resting pieces play `short_rest` / `long_rest` from `engine.activeRests()`; cooldown overlays are
   yellow (long) / blue (short) cell fills that shrink with `RestView::remaining`
-- `Renderer` depends on `Img` only: clones the board background, draws `CellOverlay`s then each
-  `PlacedSprite`, displays one window. The loop exits on ESC/Q **or** `Renderer::isOpen()` == false
+- `Renderer` depends on `Img` only: clones the window background, draws `CellOverlay`s then each
+  `PlacedSprite`, optional White/Black `HistoryHud` side panels, then displays one window. GAME OVER
+  dims the board region only when panels are present. The loop exits on ESC/Q **or**
+  `Renderer::isOpen()` == false
+- `Img::create` builds blank canvases (used for White|Board|Black composites)
 - `graphics_main.cpp` is a thin entry point (`build.bat graphics`) that loads assets and calls
   `GraphicsApplication::run()`
 

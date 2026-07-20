@@ -25,6 +25,7 @@ struct GameEvent {
     int whiteScore = 0;
     int blackScore = 0;
     std::string reason;
+    long long timeMs = 0;
 };
 
 const char* toString(GameEventType type);

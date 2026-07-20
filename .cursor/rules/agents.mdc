@@ -55,7 +55,7 @@ include/
 ├── graphics/    Animation, AnimationLoader, AnimationCache (AnimationSpec), BoardLayout, PieceVisual
 ├── view/        Img (OpenCV wrapper), Renderer
 ├── texttests/   ScriptParser (IScriptSource), ScriptRunner, ScriptCommand
-├── bus/         EventBus (Observer pub/sub), GameEvent, MoveLog/Sound subscribers
+├── bus/         EventBus (Observer pub/sub), GameEvent, MoveLog/Sound/MoveHistory subscribers
 ├── protocol/    Algebraic, CommandParser, StateSerializer (nlohmann/json)
 ├── server/      GameSession, WebSocketServer
 ├── App.h        Composition root (console)
@@ -70,7 +70,9 @@ include/
 > `src/server_main.cpp` hosts the WebSocket server: protocol → `GameSession` → existing `GameEngine`,
 > publishing events on the Observer `EventBus` (no rooms/auth yet).
 > `SoundSubscriber` plays WAV cues from `assets/sounds/` (`select`, `deselect`, `move`, `jump`, `capture`,
-> `promote`, `game_end`, `game_start`). Graphics shows a centered **GAME OVER** banner when the game ends.
+> `promote`, `game_end`, `game_start`). Graphics shows a centered **GAME OVER** banner when the game ends,
+> and White/Black side panels list moves (piece, from-to, game-clock time) via `MoveHistorySubscriber`.
+> `GameEvent::timeMs` is stamped from `GameEngine::elapsedMs()` in the graphics app only.
 
 ## Architecture
 
@@ -89,11 +91,11 @@ server_main → server/protocol/bus → engine → rules/realtime → model
 | Engine | `GameEngine` | Orchestrates model + rules + realtime |
 | I/O | `BoardParser`, `BoardPrinter` | Parse/serialize board text |
 | Input | `Controller`, `BoardMapper` | Map clicks/pixels to engine calls |
-| Bus | `EventBus`, `GameEvent`, subscribers | Observer pub/sub for score/log/sound/UI (`MoveMade`, `JumpMade`, `PieceCaptured`, `PiecePromoted`, `PieceSelected`, `SelectionCleared`, `GameEnded`, …) |
+| Bus | `EventBus`, `GameEvent`, subscribers | Observer pub/sub for score/log/sound/UI (`MoveMade`, `JumpMade`, `PieceCaptured`, `PiecePromoted`, `PieceSelected`, `SelectionCleared`, `GameEnded`, …); graphics uses `MoveHistorySubscriber` for side-panel lines |
 | Protocol | `CommandParser`, `StateSerializer`, `Algebraic` | Wire text/JSON ↔ engine calls |
 | Server | `GameSession`, `WebSocketServer` | Network host; auto-tick; seats W/B |
 | Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout`, `PieceVisual` | Load/scale sprites, play named state animations, read asset layout — via `Img` only |
-| View | `Img`, `Renderer` | `Img` wraps OpenCV; `Renderer` composites sprites over the board + drives the window |
+| View | `Img`, `Renderer` | `Img` wraps OpenCV (`create`, text, blit); `Renderer` composites sprites + optional White/Black history HUD over a wider window |
 | App | `App`, `GraphicsApplication`, `main`, `graphics_main`, `server_main` | Wire layers; console, graphics, and server entry points |
 
 ### Patterns

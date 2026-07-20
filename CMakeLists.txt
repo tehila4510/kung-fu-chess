@@ -141,6 +141,8 @@ if(EXISTS "${OPENCV_DIR}/include")
         src/bus/EventBus.cpp
         src/bus/GameEvent.cpp
         src/bus/SoundSubscriber.cpp
+        src/bus/MoveHistorySubscriber.cpp
+        src/protocol/Algebraic.cpp
     )
     add_executable(KungFuChessGraphics
         src/graphics_main.cpp

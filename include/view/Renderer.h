@@ -36,12 +36,21 @@ struct CellOverlay {
     HighlightKind kind = HighlightKind::Move;
 };
 
+// Optional side-panel move history. panel_width <= 0 disables the HUD.
+struct HistoryHud {
+    std::vector<std::string> white_lines;
+    std::vector<std::string> black_lines;
+    int panel_width = 0;
+    int board_width = 0;
+};
+
 class Renderer {
 public:
     Renderer(Img background, std::string window_name);
     int showFrame(const std::vector<PlacedSprite>& sprites,
                   const std::vector<CellOverlay>& overlays, int wait_ms,
-                  const std::string& banner_text = "") const;
+                  const std::string& banner_text = "",
+                  const HistoryHud& history = HistoryHud{}) const;
 
     bool isOpen() const;
 

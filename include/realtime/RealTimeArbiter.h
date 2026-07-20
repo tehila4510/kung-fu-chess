@@ -28,6 +28,7 @@ public:
     static constexpr int kShortRestMs = 1000;
     static constexpr int kLongRestMs = 2500;
 
+    long long elapsedMs() const;
     bool hasActiveMotion() const;
     bool hasActiveMotion(char color) const;
     bool hasActiveTravel(char color) const;

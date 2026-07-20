@@ -29,6 +29,7 @@ public:
     bool isResting(const Position& at) const;
     std::set<Position> legalMovesFrom(const Position& from) const;
     bool isGameOver() const;
+    long long elapsedMs() const;
     int rowCount() const;
     int columnCount() const;
 };

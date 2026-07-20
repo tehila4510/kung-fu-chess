@@ -18,20 +18,25 @@ void validateDimensions(int cellWidth, int cellHeight, int widthCells, int heigh
 BoardMapper::BoardMapper(int cellSize, int widthCells, int heightCells)
     : BoardMapper(cellSize, cellSize, widthCells, heightCells) {}
 
-BoardMapper::BoardMapper(int cellWidth, int cellHeight, int widthCells, int heightCells)
+BoardMapper::BoardMapper(int cellWidth, int cellHeight, int widthCells, int heightCells,
+                         int originX, int originY)
     : cellWidth(cellWidth),
       cellHeight(cellHeight),
       widthCells(widthCells),
-      heightCells(heightCells) {
+      heightCells(heightCells),
+      originX(originX),
+      originY(originY) {
     validateDimensions(cellWidth, cellHeight, widthCells, heightCells);
 }
 
 std::optional<Position> BoardMapper::pixelToCell(int x, int y) const {
-    if (x < 0 || y < 0) {
+    const int local_x = x - originX;
+    const int local_y = y - originY;
+    if (local_x < 0 || local_y < 0) {
         return std::nullopt;
     }
-    const int col = x / cellWidth;
-    const int row = y / cellHeight;
+    const int col = local_x / cellWidth;
+    const int row = local_y / cellHeight;
     if (col >= widthCells || row >= heightCells) {
         return std::nullopt;
     }
@@ -39,8 +44,8 @@ std::optional<Position> BoardMapper::pixelToCell(int x, int y) const {
 }
 
 std::pair<int, int> BoardMapper::cellCenterPixel(const Position& cell) const {
-    const int center_x = cell.col * cellWidth + cellWidth / 2;
-    const int center_y = cell.row * cellHeight + cellHeight / 2;
+    const int center_x = originX + cell.col * cellWidth + cellWidth / 2;
+    const int center_y = originY + cell.row * cellHeight + cellHeight / 2;
     return { center_x, center_y };
 }
 
@@ -62,4 +67,12 @@ int BoardMapper::getWidthCells() const {
 
 int BoardMapper::getHeightCells() const {
     return heightCells;
+}
+
+int BoardMapper::getOriginX() const {
+    return originX;
+}
+
+int BoardMapper::getOriginY() const {
+    return originY;
 }

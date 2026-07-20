@@ -2,6 +2,7 @@
 #define GRAPHICS_APPLICATION_H
 
 #include "bus/EventBus.h"
+#include "bus/MoveHistorySubscriber.h"
 #include "bus/SoundSubscriber.h"
 #include "engine/GameEngine.h"
 #include "graphics/AnimationCache.h"
@@ -47,6 +48,7 @@ private:
 
     static constexpr int kFrameWaitMs = 15;
     static constexpr int kMaxFrameStepMs = 100;
+    static constexpr int kPanelWidth = 220;
     static const std::string kWindowName;
     static const std::string kSoundsDir;
 
@@ -54,6 +56,8 @@ private:
     int cell_w_;
     int cell_h_;
     std::pair<int, int> cell_size_;
+    int board_w_;
+    int panel_w_;
 
     GameEngine engine_;
     Controller controller_;
@@ -66,6 +70,7 @@ private:
 
     EventBus bus_;
     SoundSubscriber sound_;
+    MoveHistorySubscriber history_;
 };
 
 #endif

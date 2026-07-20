@@ -50,6 +50,10 @@ bool isFleeingFrom(
 
 } // namespace
 
+long long RealTimeArbiter::elapsedMs() const {
+    return clockMs;
+}
+
 bool RealTimeArbiter::hasActiveMotion() const {
     return active[0].has_value() || active[1].has_value();
 }

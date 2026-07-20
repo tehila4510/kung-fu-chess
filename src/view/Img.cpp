@@ -88,6 +88,14 @@ Img& Img::read(const std::string& path,
     return *this;
 }
 
+Img& Img::create(int width, int height, const cv::Scalar& fill) {
+    if (width <= 0 || height <= 0) {
+        throw std::invalid_argument("Blank image dimensions must be positive");
+    }
+    img = cv::Mat(height, width, CV_8UC3, fill);
+    return *this;
+}
+
 void Img::draw_on(Img& other_img, int x, int y) const {
     if (img.empty() || other_img.img.empty()) {
         throw std::runtime_error("Both images must be loaded before drawing.");
@@ -153,6 +161,26 @@ void Img::put_text_centered(const std::string& txt, double font_size,
         cv::getTextSize(txt, cv::FONT_HERSHEY_SIMPLEX, font_size, thickness, &baseline);
     const int x = (img.cols - size.width) / 2;
     const int y = (img.rows + size.height) / 2;
+    cv::putText(img, txt, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, font_size,
+                cv::Scalar(0, 0, 0), thickness + 2, cv::LINE_AA);
+    cv::putText(img, txt, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, font_size, color,
+                thickness, cv::LINE_AA);
+}
+
+void Img::put_text_centered_in_rect(const std::string& txt, int rect_x, int rect_y,
+                                    int rect_w, int rect_h, double font_size,
+                                    const cv::Scalar& color, int thickness) {
+    if (img.empty()) {
+        throw std::runtime_error("Image not loaded.");
+    }
+    if (rect_w <= 0 || rect_h <= 0) {
+        return;
+    }
+    int baseline = 0;
+    const cv::Size size =
+        cv::getTextSize(txt, cv::FONT_HERSHEY_SIMPLEX, font_size, thickness, &baseline);
+    const int x = rect_x + (rect_w - size.width) / 2;
+    const int y = rect_y + (rect_h + size.height) / 2;
     cv::putText(img, txt, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, font_size,
                 cv::Scalar(0, 0, 0), thickness + 2, cv::LINE_AA);
     cv::putText(img, txt, cv::Point(x, y), cv::FONT_HERSHEY_SIMPLEX, font_size, color,

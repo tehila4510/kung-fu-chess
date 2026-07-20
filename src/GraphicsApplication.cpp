@@ -2,6 +2,7 @@
 
 #include "bus/GameEvent.h"
 #include "model/Board.h"
+#include "protocol/Algebraic.h"
 #include "realtime/MotionView.h"
 #include "realtime/RestView.h"
 
@@ -80,8 +81,9 @@ std::vector<std::vector<std::string>> toEngineGrid(
 }
 
 view::PlacedSprite placeSprite(const view::Img& sprite, double row, double col,
-                               int cell_w, int cell_h) {
-    const int x = static_cast<int>(col * cell_w) + (cell_w - sprite.width()) / 2;
+                               int cell_w, int cell_h, int origin_x) {
+    const int x =
+        origin_x + static_cast<int>(col * cell_w) + (cell_w - sprite.width()) / 2;
     const int y = static_cast<int>(row * cell_h) + (cell_h - sprite.height()) / 2;
     return view::PlacedSprite{&sprite, x, y};
 }
@@ -110,6 +112,29 @@ std::map<Position, const RestView*> indexRests(const std::vector<RestView>& rest
     return by_cell;
 }
 
+view::Img makeWindowBackground(view::Img board, int panel_w) {
+    if (!board.is_loaded()) {
+        throw std::runtime_error("Board background image must be loaded.");
+    }
+    if (panel_w <= 0) {
+        throw std::invalid_argument("History panel width must be positive.");
+    }
+    view::Img canvas;
+    canvas.create(board.width() + 2 * panel_w, board.height());
+    board.draw_on(canvas, panel_w, 0);
+    return canvas;
+}
+
+std::vector<std::string> formatHistoryLines(
+    const std::vector<MoveHistoryEntry>& entries) {
+    std::vector<std::string> lines;
+    lines.reserve(entries.size());
+    for (const MoveHistoryEntry& entry : entries) {
+        lines.push_back(MoveHistorySubscriber::formatEntry(entry));
+    }
+    return lines;
+}
+
 }  // namespace
 
 const std::string GraphicsApplication::kWindowName = "Kung Fu Chess";
@@ -121,14 +146,18 @@ GraphicsApplication::GraphicsApplication(graphics::BoardLayout layout,
       cell_w_(requirePositiveCellExtent(background.width(), layout_.cols, "column")),
       cell_h_(requirePositiveCellExtent(background.height(), layout_.rows, "row")),
       cell_size_{cell_w_, cell_h_},
+      board_w_(background.width()),
+      panel_w_(kPanelWidth),
       engine_(),
       controller_(engine_),
-      mapper_(cell_w_, cell_h_, layout_.cols, layout_.rows),
+      mapper_(cell_w_, cell_h_, layout_.cols, layout_.rows, kPanelWidth, 0),
       cache_(),
       visuals_(),
-      renderer_(std::move(background), kWindowName),
-      sound_(kSoundsDir, std::cout) {
+      renderer_(makeWindowBackground(std::move(background), kPanelWidth), kWindowName),
+      sound_(kSoundsDir, std::cout),
+      history_() {
     bus_.subscribe(&sound_);
+    bus_.subscribe(&history_);
     engine_.setup(Board(toEngineGrid(layout_.cells)));
     GameEvent started;
     started.type = GameEventType::GameStarted;
@@ -136,11 +165,14 @@ GraphicsApplication::GraphicsApplication(graphics::BoardLayout layout,
 }
 
 GraphicsApplication::~GraphicsApplication() {
+    bus_.unsubscribe(&history_);
     bus_.unsubscribe(&sound_);
 }
 
 void GraphicsApplication::publish(const GameEvent& event) {
-    bus_.publish(event);
+    GameEvent stamped = event;
+    stamped.timeMs = engine_.elapsedMs();
+    bus_.publish(stamped);
 }
 
 std::string GraphicsApplication::pieceAt(const Position& at) const {
@@ -165,6 +197,7 @@ void GraphicsApplication::publishArrivals(const GameSnapshot& before,
             captured.color = (arrival.piece[0] == 'w') ? 'W' : 'B';
             captured.piece = arrival.piece;
             captured.capturedPiece = arrival.capturedPiece;
+            captured.to = protocol::positionToSquare(arrival.at, engine_.rowCount());
             publish(captured);
         }
         if (arrival.promoted) {
@@ -173,6 +206,7 @@ void GraphicsApplication::publishArrivals(const GameSnapshot& before,
             promoted.color = (arrival.piece[0] == 'w') ? 'W' : 'B';
             promoted.piece = arrival.piece;
             promoted.reason = "pawn_to_queen";
+            promoted.to = protocol::positionToSquare(arrival.at, engine_.rowCount());
             publish(promoted);
         }
     }
@@ -216,7 +250,13 @@ int GraphicsApplication::run() {
             buildLegalMoveOverlays(snapshot, motions);
         overlays.insert(overlays.end(), legal.begin(), legal.end());
         const std::string banner = snapshot.gameOver ? "GAME OVER" : "";
-        const int key = renderer_.showFrame(sprites, overlays, kFrameWaitMs, banner);
+        view::HistoryHud history_hud;
+        history_hud.panel_width = panel_w_;
+        history_hud.board_width = board_w_;
+        history_hud.white_lines = formatHistoryLines(history_.whiteEntries());
+        history_hud.black_lines = formatHistoryLines(history_.blackEntries());
+        const int key =
+            renderer_.showFrame(sprites, overlays, kFrameWaitMs, banner, history_hud);
         handleMouseClick(view::Img::pollMouseClick(kWindowName));
         if (isExitKey(key) || !renderer_.isOpen()) {
             break;
@@ -254,10 +294,14 @@ void GraphicsApplication::handleMouseClick(
         const MoveOutcome result = controller_.jump(*cell);
         if (result.is_accepted) {
             std::cout << "Jump accepted at (" << cell->row << ", " << cell->col << ")\n";
+            const std::string square =
+                protocol::positionToSquare(*cell, engine_.rowCount());
             GameEvent jumpEvent;
             jumpEvent.type = GameEventType::JumpMade;
             jumpEvent.color = (piece.size() == 2 && piece[0] == 'w') ? 'W' : 'B';
             jumpEvent.piece = piece;
+            jumpEvent.from = square;
+            jumpEvent.to = square;
             publish(jumpEvent);
         } else {
             std::cout << "Jump rejected: " << result.reason << '\n';
@@ -296,6 +340,10 @@ void GraphicsApplication::handleMouseClick(
                 moveEvent.type = GameEventType::MoveMade;
                 moveEvent.color = (mover.size() == 2 && mover[0] == 'w') ? 'W' : 'B';
                 moveEvent.piece = mover;
+                moveEvent.from =
+                    protocol::positionToSquare(from, engine_.rowCount());
+                moveEvent.to =
+                    protocol::positionToSquare(*cell, engine_.rowCount());
                 publish(moveEvent);
             } else {
                 std::cout << "Move rejected: " << result.moveResult.reason << '\n';
@@ -410,14 +458,16 @@ std::vector<view::PlacedSprite> GraphicsApplication::buildSprites(
                 }
                 anim.update(dt_seconds);
                 sprites.push_back(
-                    placeSprite(anim.current_frame(), row, col, cell_w_, cell_h_));
+                    placeSprite(anim.current_frame(), row, col, cell_w_, cell_h_,
+                                panel_w_));
             } else {
                 rest_anim_keys_.erase(cell);
                 graphics::Animation& idle =
                     visual.animationFor(graphics::kIdleState);
                 idle.update(dt_seconds);
                 sprites.push_back(
-                    placeSprite(idle.current_frame(), row, col, cell_w_, cell_h_));
+                    placeSprite(idle.current_frame(), row, col, cell_w_, cell_h_,
+                                panel_w_));
             }
         }
     }
@@ -441,7 +491,7 @@ std::vector<view::PlacedSprite> GraphicsApplication::buildSprites(
         const double col =
             motion.from.col + (motion.to.col - motion.from.col) * motion.progress;
         sprites.push_back(
-            placeSprite(anim.current_frame(), row, col, cell_w_, cell_h_));
+            placeSprite(anim.current_frame(), row, col, cell_w_, cell_h_, panel_w_));
     }
 
     return sprites;
@@ -456,7 +506,7 @@ std::vector<view::CellOverlay> GraphicsApplication::buildRestOverlays(
         view::CellOverlay overlay;
         overlay.kind = rest.kind == RestKind::Short ? view::HighlightKind::ShortRest
                                                     : view::HighlightKind::LongRest;
-        overlay.cell_x = rest.at.col * cell_w_;
+        overlay.cell_x = panel_w_ + rest.at.col * cell_w_;
         overlay.cell_y = rest.at.row * cell_h_;
         overlay.cell_w = cell_w_;
         overlay.cell_h = cell_h_;

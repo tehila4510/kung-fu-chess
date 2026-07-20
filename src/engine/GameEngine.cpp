@@ -106,6 +106,10 @@ bool GameEngine::isGameOver() const {
     return gameState.isGameOver();
 }
 
+long long GameEngine::elapsedMs() const {
+    return arbiter.elapsedMs();
+}
+
 int GameEngine::rowCount() const {
     return gameState.rowCount();
 }
