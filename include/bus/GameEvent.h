@@ -30,4 +30,7 @@ struct GameEvent {
 
 const char* toString(GameEventType type);
 
+// Material points for a captured piece token (e.g. "bN" -> 3). King is 0.
+int capturePoints(const std::string& capturedPieceToken);
+
 #endif

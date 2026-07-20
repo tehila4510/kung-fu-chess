@@ -107,10 +107,11 @@ void GameSession::publishArrivals(const GameSnapshot& before,
             captured.to = protocol::positionToSquare(arrival.at, rows);
             publish(captured);
 
+            const int points = capturePoints(arrival.capturedPiece);
             if (captured.color == 'W') {
-                ++whiteScore_;
+                whiteScore_ += points;
             } else {
-                ++blackScore_;
+                blackScore_ += points;
             }
             GameEvent score;
             score.type = GameEventType::ScoreUpdated;

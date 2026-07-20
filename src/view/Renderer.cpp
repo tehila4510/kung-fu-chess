@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace view {
@@ -47,12 +48,14 @@ void drawOverlay(Img& frame, const CellOverlay& overlay) {
 }
 
 void drawHistoryColumn(Img& frame, int panel_x, int panel_w, const char* title,
-                       const std::vector<std::string>& lines) {
+                       int score, const std::vector<std::string>& lines) {
     if (panel_w <= 0) {
         return;
     }
     frame.put_text(title, panel_x + 12, 28, 0.55, kWhite, 1);
-    int y = 56;
+    frame.put_text("SCORE: " + std::to_string(score), panel_x + 12, 52, 0.45,
+                   kPanelText, 1);
+    int y = 80;
     const int line_step = 18;
     for (const std::string& line : lines) {
         if (y > frame.height() - 12) {
@@ -90,9 +93,11 @@ int Renderer::showFrame(const std::vector<PlacedSprite>& sprites,
     }
 
     if (history.panel_width > 0 && history.board_width > 0) {
-        drawHistoryColumn(frame, 0, history.panel_width, "WHITE", history.white_lines);
+        drawHistoryColumn(frame, 0, history.panel_width, "WHITE",
+                          history.white_score, history.white_lines);
         drawHistoryColumn(frame, history.panel_width + history.board_width,
-                          history.panel_width, "BLACK", history.black_lines);
+                          history.panel_width, "BLACK", history.black_score,
+                          history.black_lines);
     }
 
     if (!banner_text.empty()) {

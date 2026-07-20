@@ -38,7 +38,7 @@ CMakeLists.txt   optional CMake build
 > protocol and replays it against the `model/rules/realtime/engine/input/io` layers.
 > `src/server_main.cpp` hosts the WebSocket server (`GameSession` + `EventBus` over existing `GameEngine`).
 > `SoundSubscriber` plays WAV cues from `assets/sounds/` (`select`, `deselect`, `move`, `jump`, `capture`, `promote`, `game_end`, `game_start`).
-> Graphics draws a centered **GAME OVER** banner when `GameSnapshot::gameOver` is true, and White/Black side panels list moves (piece, from-to, game-clock time) via `MoveHistorySubscriber`. `GameEvent::timeMs` is stamped from `GameEngine::elapsedMs()` in the graphics app only.
+> Graphics draws a centered **GAME OVER** banner when `GameSnapshot::gameOver` is true, and White/Black side panels list moves (piece, from-to, game-clock time) and capture `SCORE` (material: P1 N/B3 R5 Q9) via `MoveHistorySubscriber`. `GameEvent::timeMs` is stamped from `GameEngine::elapsedMs()` in the graphics app only.
 
 ## Build & verify
 
@@ -87,7 +87,7 @@ server_main → server/protocol/bus → engine → rules/realtime → model
 | Engine | `GameEngine` | Orchestrates model + rules + realtime; exposes `MoveResult`, `GameSnapshot` |
 | I/O | `BoardParser`, `BoardPrinter` | Parse and serialize board text |
 | Input | `Controller`, `BoardMapper` | Map clicks/pixels to engine calls |
-| Bus | `EventBus`, `GameEvent`, subscribers | Observer pub/sub for score/log/sound/UI (`MoveMade`, `JumpMade`, `PieceCaptured`, `PiecePromoted`, `PieceSelected`, `SelectionCleared`, `GameEnded`, …); graphics uses `MoveHistorySubscriber` for side-panel lines |
+| Bus | `EventBus`, `GameEvent`, subscribers | Observer pub/sub for score/log/sound/UI (`MoveMade`, `JumpMade`, `PieceCaptured`, `PiecePromoted`, `PieceSelected`, `SelectionCleared`, `GameEnded`, `ScoreUpdated`, …); graphics uses `MoveHistorySubscriber` for side-panel lines + SCORE; `capturePoints()` maps captured piece → material |
 | Protocol | `CommandParser`, `StateSerializer`, `Algebraic` | Wire text/JSON ↔ engine calls |
 | Server | `GameSession`, `WebSocketServer` | Network host; auto-tick; W/B seats (no rooms/auth yet) |
 | Graphics | `Animation`, `AnimationCache`, `AnimationLoader`, `BoardLayout`, `PieceVisual` | Load/scale sprites, play named state animations, read asset layout — depends on `Img` only |

@@ -199,6 +199,18 @@ void GraphicsApplication::publishArrivals(const GameSnapshot& before,
             captured.capturedPiece = arrival.capturedPiece;
             captured.to = protocol::positionToSquare(arrival.at, engine_.rowCount());
             publish(captured);
+
+            const int points = capturePoints(arrival.capturedPiece);
+            if (captured.color == 'W') {
+                whiteScore_ += points;
+            } else {
+                blackScore_ += points;
+            }
+            GameEvent score;
+            score.type = GameEventType::ScoreUpdated;
+            score.whiteScore = whiteScore_;
+            score.blackScore = blackScore_;
+            publish(score);
         }
         if (arrival.promoted) {
             GameEvent promoted;
@@ -215,6 +227,8 @@ void GraphicsApplication::publishArrivals(const GameSnapshot& before,
         GameEvent ended;
         ended.type = GameEventType::GameEnded;
         ended.reason = "king_captured";
+        ended.whiteScore = whiteScore_;
+        ended.blackScore = blackScore_;
         publish(ended);
     }
 }
@@ -253,6 +267,8 @@ int GraphicsApplication::run() {
         view::HistoryHud history_hud;
         history_hud.panel_width = panel_w_;
         history_hud.board_width = board_w_;
+        history_hud.white_score = history_.whiteScore();
+        history_hud.black_score = history_.blackScore();
         history_hud.white_lines = formatHistoryLines(history_.whiteEntries());
         history_hud.black_lines = formatHistoryLines(history_.blackEntries());
         const int key =

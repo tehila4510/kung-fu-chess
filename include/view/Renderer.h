@@ -40,6 +40,8 @@ struct CellOverlay {
 struct HistoryHud {
     std::vector<std::string> white_lines;
     std::vector<std::string> black_lines;
+    int white_score = 0;
+    int black_score = 0;
     int panel_width = 0;
     int board_width = 0;
 };

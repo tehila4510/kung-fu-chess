@@ -67,9 +67,11 @@ board.csv → graphics::BoardLayout → GraphicsApplication
 - Resting pieces play `short_rest` / `long_rest` from `engine.activeRests()`; cooldown overlays are
   yellow (long) / blue (short) cell fills that shrink with `RestView::remaining`
 - `Renderer` depends on `Img` only: clones the window background, draws `CellOverlay`s then each
-  `PlacedSprite`, optional White/Black `HistoryHud` side panels, then displays one window. GAME OVER
+  `PlacedSprite`, optional White/Black `HistoryHud` side panels (move lines + SCORE), then displays one window. GAME OVER
   dims the board region only when panels are present. The loop exits on ESC/Q **or**
   `Renderer::isOpen()` == false
+- Capture scoring uses classic material via `capturePoints()` (P=1, N/B=3, R=5, Q=9, K=0); graphics
+  and server both publish `ScoreUpdated` after each capture
 - `Img::create` builds blank canvases (used for White|Board|Black composites)
 - `graphics_main.cpp` is a thin entry point (`build.bat graphics`) that loads assets and calls
   `GraphicsApplication::run()`

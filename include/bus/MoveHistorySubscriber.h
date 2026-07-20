@@ -17,10 +17,12 @@ struct MoveHistoryEntry {
     std::string capturedPiece;
 };
 
-// Accumulates White/Black move lines from GameEvent for the graphics HUD.
+// Accumulates White/Black move lines and capture scores for the graphics HUD.
 class MoveHistorySubscriber : public IGameEventListener {
     std::vector<MoveHistoryEntry> white_;
     std::vector<MoveHistoryEntry> black_;
+    int whiteScore_ = 0;
+    int blackScore_ = 0;
 
     void append(MoveHistoryEntry entry);
 
@@ -33,6 +35,8 @@ public:
 
     const std::vector<MoveHistoryEntry>& whiteEntries() const;
     const std::vector<MoveHistoryEntry>& blackEntries() const;
+    int whiteScore() const;
+    int blackScore() const;
 
     static std::string formatEntry(const MoveHistoryEntry& entry);
 };

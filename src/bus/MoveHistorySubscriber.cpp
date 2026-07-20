@@ -1,5 +1,7 @@
 #include "bus/MoveHistorySubscriber.h"
 
+#include "bus/GameEvent.h"
+
 #include <iomanip>
 #include <sstream>
 
@@ -48,6 +50,14 @@ const std::vector<MoveHistoryEntry>& MoveHistorySubscriber::blackEntries() const
     return black_;
 }
 
+int MoveHistorySubscriber::whiteScore() const {
+    return whiteScore_;
+}
+
+int MoveHistorySubscriber::blackScore() const {
+    return blackScore_;
+}
+
 void MoveHistorySubscriber::append(MoveHistoryEntry entry) {
     std::vector<MoveHistoryEntry>& side =
         (entry.color == 'B') ? black_ : white_;
@@ -61,7 +71,8 @@ std::string MoveHistorySubscriber::formatEntry(const MoveHistoryEntry& entry) {
     std::ostringstream oss;
     oss << formatTimeSeconds(entry.timeMs) << "  ";
     if (entry.isCapture) {
-        oss << "capture " << entry.capturedPiece;
+        const int points = capturePoints(entry.capturedPiece);
+        oss << "capture " << entry.capturedPiece << " +" << points;
         if (!entry.to.empty()) {
             oss << " on " << entry.to;
         }
@@ -82,6 +93,12 @@ std::string MoveHistorySubscriber::formatEntry(const MoveHistoryEntry& entry) {
 }
 
 void MoveHistorySubscriber::onEvent(const GameEvent& event) {
+    if (event.type == GameEventType::ScoreUpdated) {
+        whiteScore_ = event.whiteScore;
+        blackScore_ = event.blackScore;
+        return;
+    }
+
     if (event.type == GameEventType::MoveMade ||
         event.type == GameEventType::JumpMade) {
         MoveHistoryEntry entry;

@@ -71,6 +71,8 @@ private:
     EventBus bus_;
     SoundSubscriber sound_;
     MoveHistorySubscriber history_;
+    int whiteScore_ = 0;
+    int blackScore_ = 0;
 };
 
 #endif
