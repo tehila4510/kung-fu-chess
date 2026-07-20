@@ -57,7 +57,7 @@ Server reuses the same `GameEngine` (no forked logic). `GameSession` publishes B
 
 1. Place logic in the correct layer — not in `main`
 2. Expose results via small structs, not raw internal state
-3. Keep abstractions generic: prefer interfaces + factories over `switch` on piece kind
+3. Keep abstractions generic: prefer interfaces + factories / `std::unordered_map` lookups over `switch` on piece kind (or other extensible keys). Examples: `RuleEngine` kind→rules, `capturePoints` kind→score, piece display names, sound cues. Reserve `switch` for small closed enum→string helpers only.
 4. Validate at boundaries; assume nothing about caller intent inside engine
 
 ## Exception flow

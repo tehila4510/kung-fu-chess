@@ -26,6 +26,7 @@ alwaysApply: true
 - Structs for plain data (`MoveResult`, `Position`); classes for behavior
 - Prefer `const` methods and `const` references for read-only params
 - Keep file-local helpers as `static` functions in `.cpp` files
+- Prefer `std::unordered_map` over `switch` for extensible key→value lookups (piece kind → points/names/rules, event→cue); `switch` only for small closed enum→string helpers
 
 ## Domain
 

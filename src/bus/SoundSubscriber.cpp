@@ -1,5 +1,6 @@
 #include "bus/SoundSubscriber.h"
 
+#include <unordered_map>
 #include <utility>
 
 #ifdef _WIN32
@@ -9,6 +10,32 @@
 #include <windows.h>
 #include <mmsystem.h>
 #endif
+
+namespace {
+
+struct GameEventTypeHash {
+    size_t operator()(GameEventType type) const noexcept {
+        return static_cast<size_t>(type);
+    }
+};
+
+const std::unordered_map<GameEventType, const char*, GameEventTypeHash>&
+soundCueByEventType() {
+    static const std::unordered_map<GameEventType, const char*, GameEventTypeHash>
+        kCues = {
+            {GameEventType::MoveMade, "move"},
+            {GameEventType::JumpMade, "jump"},
+            {GameEventType::PieceCaptured, "capture"},
+            {GameEventType::PiecePromoted, "promote"},
+            {GameEventType::PieceSelected, "select"},
+            {GameEventType::SelectionCleared, "deselect"},
+            {GameEventType::GameEnded, "game_end"},
+            {GameEventType::GameStarted, "game_start"},
+        };
+    return kCues;
+}
+
+}  // namespace
 
 SoundSubscriber::SoundSubscriber(std::string soundsDir, std::ostream& out)
     : soundsDir_(std::move(soundsDir)), out_(out) {}
@@ -27,20 +54,11 @@ void SoundSubscriber::playCue(const char* cue) const {
 }
 
 void SoundSubscriber::onEvent(const GameEvent& event) {
-    const char* cue = nullptr;
-    switch (event.type) {
-        case GameEventType::MoveMade:         cue = "move"; break;
-        case GameEventType::JumpMade:         cue = "jump"; break;
-        case GameEventType::PieceCaptured:    cue = "capture"; break;
-        case GameEventType::PiecePromoted:    cue = "promote"; break;
-        case GameEventType::PieceSelected:    cue = "select"; break;
-        case GameEventType::SelectionCleared: cue = "deselect"; break;
-        case GameEventType::GameEnded:        cue = "game_end"; break;
-        case GameEventType::GameStarted:      cue = "game_start"; break;
-        case GameEventType::ScoreUpdated:     cue = nullptr; break;
+    const auto& cues = soundCueByEventType();
+    const auto it = cues.find(event.type);
+    if (it == cues.end() || it->second == nullptr) {
+        return;
     }
-    if (cue != nullptr) {
-        out_ << "[sound] trigger=" << cue << '\n';
-        playCue(cue);
-    }
+    out_ << "[sound] trigger=" << it->second << '\n';
+    playCue(it->second);
 }

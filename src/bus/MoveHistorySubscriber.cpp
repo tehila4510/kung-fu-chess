@@ -4,26 +4,26 @@
 
 #include <iomanip>
 #include <sstream>
+#include <unordered_map>
 
 namespace {
 
+const std::unordered_map<char, const char*>& pieceNamesByKind() {
+    static const std::unordered_map<char, const char*> kNames = {
+        {'K', "King"},
+        {'Q', "Queen"},
+        {'R', "Rook"},
+        {'B', "Bishop"},
+        {'N', "Knight"},
+        {'P', "Pawn"},
+    };
+    return kNames;
+}
+
 const char* pieceKindName(char kind) {
-    switch (kind) {
-        case 'K':
-            return "King";
-        case 'Q':
-            return "Queen";
-        case 'R':
-            return "Rook";
-        case 'B':
-            return "Bishop";
-        case 'N':
-            return "Knight";
-        case 'P':
-            return "Pawn";
-        default:
-            return "Piece";
-    }
+    const auto& names = pieceNamesByKind();
+    const auto it = names.find(kind);
+    return (it != names.end()) ? it->second : "Piece";
 }
 
 std::string pieceDisplayName(const std::string& token) {

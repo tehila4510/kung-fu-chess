@@ -16,6 +16,8 @@ Always prioritize software design quality, maintainability, and flexibility when
 ## 2. Code Flexibility & Maintainability
 
 - **Write generic and reusable code**: Avoid hardcoding values. Use template programming or configuration structures where applicable.
+- **Prefer `std::unordered_map` (hash map) for key → value lookups** instead of `switch` on piece kind, event→cue tables, capture points, display names, and similar extensible mappings. Register entries in one map (file-local `static const` or a class member like `RuleEngine::rules`) and look up with `find`. Adding a new key should mean adding a map entry — not another `case`.
+- **`switch` is OK** for small, closed enum→string helpers that are not domain tables (e.g. `toString(GameEventType)`, `toString(MoveResult)`).
 - **Dependency injection**: Classes should receive their dependencies via constructor injection rather than instantiating them internally. Prefer referencing interfaces or abstraction layers.
 - **Single Responsibility Principle (SRP)**: Each class must have exactly one reason to change. If a class is handling both game rules and coordinate translation, split it.
 

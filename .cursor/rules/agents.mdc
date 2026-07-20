@@ -125,6 +125,7 @@ server_main → server/protocol/bus → engine → rules/realtime → model
 - Prefer `const` methods and references for read-only params
 - File-local helpers as `static` in `.cpp` files
 - **Header vs implementation (strict):** `.h` files are headers only — declarations, include guards, `static constexpr` constants, defaulted members. All function/method bodies go in the matching `.cpp`; never define function bodies inline in a header.
+- **Prefer `std::unordered_map` over `switch` for extensible key→value tables** (piece kind → rules / points / names, event type → sound cue, etc.). Follow `RuleEngine`'s map pattern. Leave `switch` for small closed enum→string helpers only (`toString(...)`).
 
 ## Exception handling (throw up, catch at boundaries)
 

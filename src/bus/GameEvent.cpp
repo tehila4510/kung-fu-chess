@@ -1,5 +1,23 @@
 #include "bus/GameEvent.h"
 
+#include <unordered_map>
+
+namespace {
+
+const std::unordered_map<char, int>& capturePointsByKind() {
+    static const std::unordered_map<char, int> kPoints = {
+        {'P', 1},
+        {'N', 3},
+        {'B', 3},
+        {'R', 5},
+        {'Q', 9},
+        {'K', 0},
+    };
+    return kPoints;
+}
+
+}  // namespace
+
 const char* toString(GameEventType type) {
     switch (type) {
         case GameEventType::MoveMade:         return "MoveMade";
@@ -19,19 +37,7 @@ int capturePoints(const std::string& capturedPieceToken) {
     if (capturedPieceToken.size() != 2) {
         return 0;
     }
-    switch (capturedPieceToken[1]) {
-        case 'P':
-            return 1;
-        case 'N':
-        case 'B':
-            return 3;
-        case 'R':
-            return 5;
-        case 'Q':
-            return 9;
-        case 'K':
-            return 0;
-        default:
-            return 0;
-    }
+    const auto& points = capturePointsByKind();
+    const auto it = points.find(capturedPieceToken[1]);
+    return (it != points.end()) ? it->second : 0;
 }

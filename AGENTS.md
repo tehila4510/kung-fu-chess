@@ -130,6 +130,12 @@ diminishing yellow (long) or blue (short) cell overlay.
 - `.h` files are **headers only**: include guards, includes, declarations, `static constexpr` constants, and defaulted special members (`= default`)
 - `.cpp` files hold **all implementations** — every function and method body lives in the matching source file, never inline in the header
 
+## Maps over switches
+
+- Prefer `std::unordered_map` for extensible key→value tables (piece kind → rules / capture points / display names, event type → sound cue, etc.)
+- Follow the `RuleEngine` pattern: register entries in a map and look up with `find`
+- Reserve `switch` for small closed enum→string helpers only (e.g. `toString(GameEventType)`)
+
 ## Exception handling (throw up, catch at boundaries)
 
 **Goal:** validate early, throw from inner layers, catch only where errors must be translated or recovered — never log-and-rethrow the same exception at every layer.
@@ -188,6 +194,7 @@ Applies to: `model/`, `realtime/`, low-level helpers (`BoardMapper` constructor,
 - Place logic in the correct layer — not in `main`
 - Match naming: PascalCase classes, camelCase methods
 - Register piece rules by kind in the `RuleEngine` constructor map — no piece-specific branches in `validateMove`
+- Prefer `std::unordered_map` over `switch` for other extensible lookups (capture points, piece names, sound cues); `switch` only for small closed enum→string helpers
 - Do not add external libraries to the engine/console/tests — STL only there
 - Graphics: Qama Tech `Img` only; OpenCV confined to `Img.h` / `Img.cpp` — remove any other graphics libs immediately
 - Do not commit `build/` artifacts unless explicitly asked

@@ -60,7 +60,7 @@ if (!board.isWithinBounds(pos)) return;
 std::cout << "ERROR UNKNOWN_TOKEN\n";
 return false;
 
-// Rule lookup via the RuleEngine map, not inline switches
+// Extensible lookups: unordered_map + find, not switch on piece kind / similar keys
 const auto it = rules.find(piece.kind);
 if (it != rules.end()) it->second->isValidMove(from, to, board);
 ```

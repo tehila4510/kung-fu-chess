@@ -27,6 +27,7 @@ Model types must be usable without knowing about realtime, I/O, or rendering.
 
 - Each piece implements `IPieceRules::isValidMove(from, to, board)` in its own `rules/*Rules.{h,cpp}` (e.g. `RookRules`, `PawnRules`)
 - `RuleEngine` owns an `unordered_map<char, unique_ptr<IPieceRules>>` populated in its constructor
+- Prefer the same map style for any piece-kind table (points, names, …) — do not `switch` on `KQRBNP`
 - `RuleEngine::validateMove` composes: bounds → source nonempty → not friendly dest → piece rule lookup in the map
 - Return `MoveValidation` with machine-readable `reason` strings in English
 
