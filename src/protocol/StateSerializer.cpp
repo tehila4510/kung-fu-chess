@@ -103,12 +103,19 @@ std::string serializeAuthRequiredJson() {
 }
 
 std::string serializeAuthOkJson(const std::string& username, int rating,
-                                char assignedColor) {
+                                const std::string& role) {
     nlohmann::json root = {
         { "type", "auth_ok" },
         { "username", username },
         { "rating", rating },
-        { "color", std::string(1, assignedColor) }
+        { "role", role }
+    };
+    return root.dump();
+}
+
+std::string serializeSearchingJson() {
+    nlohmann::json root = {
+        { "type", "searching" }
     };
     return root.dump();
 }

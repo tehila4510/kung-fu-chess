@@ -19,9 +19,9 @@ alwaysApply: true
 | View | `view/` | `Img` (OpenCV wrapper) + `Renderer` — composites sprites, optional White/Black history HUD, drives the window; never mutates `Board` |
 | Text tests | `texttests/` | `ScriptParser`, `ScriptRunner` — scripted stdin integration |
 | Bus | `bus/` | `EventBus` Observer pub/sub — score/log/sound/UI/rating events (`MoveMade`, `JumpMade`, `PieceCaptured`, `PiecePromoted`, `PieceSelected`, `SelectionCleared`, `GameEnded`, `ScoreUpdated`, …); `MoveHistorySubscriber` stores graphics side-panel lines + SCORE; `RatingSubscriber` updates ELO on `GameEnded`; `capturePoints()` for material; logic does not know subscribers |
-| Protocol | `protocol/` | Algebraic ↔ `Position`; plain-text commands in (`AUTH`, moves); JSON state/events out |
+| Protocol | `protocol/` | Algebraic ↔ `Position`; plain-text commands in (`AUTH`, `PLAY`, moves); JSON state/events out |
 | Auth | `auth/` | `AuthController` → `UserService` → `UserRepository` (SQLite); `PasswordHasher` (bcrypt), `Elo` — server-only |
-| Server | `server/` | `GameSession` + `WebSocketServer` — AUTH then network host, auto-tick, W/B seats |
+| Server | `server/` | `MatchQueue` (STL rating-bucketed queue, ELO±100, 60s expiry) + `MatchRoom` (per-match `GameSession` + `RatingSubscriber`) + `WebSocketServer` — AUTH → PLAY, multi-match, auto-tick; `Viewer` stub (Rooms TODO) |
 | App | `App`, `GraphicsApplication`, `main`, `graphics_main`, `server_main` | Composition roots: console, graphics, WebSocket server |
 
 ## Dependency rule
@@ -44,13 +44,13 @@ GraphicsApplication → graphics/ → view(Img)
 
 `graphics/` and `Renderer` must never `#include <opencv2/...>`; all pixel work goes through the `Img` API.
 
-Server reuses the same `GameEngine` (no forked logic). `GameSession` publishes Bus events after engine calls; the network layer never embeds rules. `WebSocketServer` requires `AUTH` (via `AuthController` → `UserService`) before seating; `RatingSubscriber` listens for `GameEnded` and updates ratings via `UserService`.
+Server reuses the same `GameEngine` (no forked logic). `GameSession` publishes Bus events after engine calls; the network layer never embeds rules. Matchmaking pure logic lives in `MatchQueue` (rating buckets, earliest `queuedAt`, ELO±100, 60s expiry; no websocketpp). `WebSocketServer` requires `AUTH` then `PLAY`, owns a `MatchQueue`, and maps `PlayerId` ↔ `ConnectionHdl`; each match owns a `MatchRoom` with its own `GameSession` and `RatingSubscriber`. Connections are not rejected as `server_full`; `Viewer` is a stub for later Rooms spectators. Seated disconnect teardown is a placeholder (`// TODO: implement 20s auto-resign with countdown per spec`).
 
 ## Design patterns
 
 - **Strategy**: one `IPieceRules` per piece type; `RuleEngine` maps piece kind → strategy via `unordered_map<char, unique_ptr<IPieceRules>>`
 - **DTO**: cross-boundary structs (`MoveResult`, `MoveValidation`, `GameSnapshot`, `ArrivalEvent`, `MotionView`, `RestView`) — plain data, no behavior
-- **Facade**: `GameEngine` is the single entry point for game logic; `GameSession` is the server-side facade over it
+- **Facade**: `GameEngine` is the single entry point for game logic; `GameSession` is the server-side facade over it; `MatchRoom` owns one session per match; `MatchQueue` owns rating-bucketed matchmaking
 - **Observer**: `EventBus` for MoveMade / PieceCaptured / GameEnded / ScoreUpdated / …
 - **Snapshot**: view reads `GameSnapshot`; never mutates `Board` directly
 

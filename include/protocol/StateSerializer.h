@@ -21,7 +21,9 @@ std::string serializeWelcomeJson(char assignedColor);
 std::string serializeAuthRequiredJson();
 
 std::string serializeAuthOkJson(const std::string& username, int rating,
-                                char assignedColor);
+                                const std::string& role);
+
+std::string serializeSearchingJson();
 
 }  // namespace protocol
 
